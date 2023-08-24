@@ -7,8 +7,10 @@ import com.gpt5.laundry.model.response.CategoryResponse;
 import com.gpt5.laundry.repository.CategoryRepository;
 import com.gpt5.laundry.service.CategoryPriceService;
 import com.gpt5.laundry.service.CategoryService;
+import com.gpt5.laundry.util.ValidationUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.hibernate.validator.internal.metadata.facets.Validatable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -30,11 +32,13 @@ import java.util.Optional;
 public class CategoryServiceImpl implements CategoryService {
     private final CategoryRepository categoryRepository;
     private final CategoryPriceService categoryPriceService;
+    private final ValidationUtils validationUtils;
 
     @Override
     @Transactional(rollbackOn = Exception.class)
     public CategoryResponse create(CategoryRequest request) {
         log.info("start create category");
+        validationUtils.validate(request);
 
         Category category = categoryRepository.saveAndFlush(
                 Category.builder()
@@ -54,6 +58,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         log.info("end create category");
         return CategoryResponse.builder()
+                .id(category.getId())
                 .name(category.getName())
                 .description(category.getDescription())
                 .price(categoryPrice.getPrice())
@@ -89,6 +94,7 @@ public class CategoryServiceImpl implements CategoryService {
                 .map(category -> {
                     List<CategoryPrice> prices = categoryPriceService.getAllIsActiveByCategory_Id(category.getId());
                     return CategoryResponse.builder()
+                            .id(category.getId())
                             .name(category.getName())
                             .description(category.getDescription())
                             .price(prices.get(0).getPrice())
@@ -103,6 +109,7 @@ public class CategoryServiceImpl implements CategoryService {
     @Transactional(rollbackOn = Exception.class)
     public CategoryResponse update(CategoryRequest request) {
         log.info("start update category");
+        validationUtils.validate(request);
 
         Category category = getById(request.getId());
         category.setName(request.getName());
@@ -134,6 +141,7 @@ public class CategoryServiceImpl implements CategoryService {
 
         log.info("end update category");
         return CategoryResponse.builder()
+                .id(category.getId())
                 .name(category.getName())
                 .description(category.getDescription())
                 .price(request.getPrice())

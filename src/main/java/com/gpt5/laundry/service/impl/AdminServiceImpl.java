@@ -11,12 +11,16 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class AdminServiceImpl implements AdminService {
     private final AdminRepository adminRepository;
 
     @Override
     public Admin create(Admin admin) {
-        return adminRepository.saveAndFlush(admin);
+        log.info("start create admin");
+        Admin saved = adminRepository.saveAndFlush(admin);
+        log.info("end create admin");
+        return saved;
     }
 
     @Override

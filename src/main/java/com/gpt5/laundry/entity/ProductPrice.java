@@ -19,7 +19,7 @@ public class ProductPrice extends BaseAuditor<String> {
     @Column(name = "product_price_id")
     private String id;
 
-    @Column(name = "price")
+    @Column(name = "price", columnDefinition = "bigint check (price>=0)")
     private Long price;
 
     @Column(name = "isActive")

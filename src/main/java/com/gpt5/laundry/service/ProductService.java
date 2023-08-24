@@ -1,18 +1,18 @@
 package com.gpt5.laundry.service;
 
-import com.gpt5.laundry.entity.Category;
 import com.gpt5.laundry.entity.Product;
-
-import java.util.List;
+import com.gpt5.laundry.model.request.ProductRequest;
+import com.gpt5.laundry.model.response.ProductResponse;
+import org.springframework.data.domain.Page;
 
 public interface ProductService {
-    Product create(Product product);
+    ProductResponse create(ProductRequest request);
 
     Product getById(String id);
 
-    List<Product> getAll();
+    Page<ProductResponse> getAll(String keyword, Integer page, Integer size, String sortBy, String direction);
 
-    Product update(Product product);
+    ProductResponse update(ProductRequest request);
 
     void deleteById(String id);
 }

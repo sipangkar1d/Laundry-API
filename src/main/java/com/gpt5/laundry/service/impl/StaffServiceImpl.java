@@ -63,6 +63,7 @@ public class StaffServiceImpl implements StaffService {
         Page<StaffResponse> staffResponses = staffRepository
                 .findAll(specification, pageable)
                 .map(staff -> StaffResponse.builder()
+                        .id(staff.getId())
                         .name(staff.getName())
                         .email(staff.getEmail())
                         .phone(staff.getPhone())
@@ -88,6 +89,7 @@ public class StaffServiceImpl implements StaffService {
 
         log.info("end deactivate staff");
         return StaffResponse.builder()
+                .id(staff.getId())
                 .name(save.getName())
                 .email(save.getEmail())
                 .phone(save.getPhone())
