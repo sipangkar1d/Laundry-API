@@ -14,7 +14,7 @@ import java.util.List;
 @Entity
 @Table(name = "m_category")
 public class
-Category extends BaseAuditor<String>{
+Category extends BaseAuditor<String> {
     @Id
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @GeneratedValue(generator = "uuid2")
@@ -29,4 +29,8 @@ Category extends BaseAuditor<String>{
 
     @OneToMany(mappedBy = "category")
     private List<CategoryPrice> categoryPrices;
+
+    public void addCategoryPrice(CategoryPrice categoryPrice) {
+        this.categoryPrices.add(categoryPrice);
+    }
 }
