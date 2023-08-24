@@ -1,12 +1,9 @@
 package com.gpt5.laundry.service.impl;
 
-import com.gpt5.laundry.entity.Role;
-import com.gpt5.laundry.entity.UserCredential;
-import com.gpt5.laundry.entity.UserDetailsImpl;
+import com.gpt5.laundry.entity.*;
 import com.gpt5.laundry.entity.constant.ERole;
 import com.gpt5.laundry.model.request.LoginRequest;
 import com.gpt5.laundry.model.request.RegisterRequest;
-import com.gpt5.laundry.model.request.StaffRequest;
 import com.gpt5.laundry.model.response.LoginResponse;
 import com.gpt5.laundry.model.response.RegisterResponse;
 import com.gpt5.laundry.security.BCryptUtils;
@@ -61,20 +58,55 @@ public class AuthServiceImpl implements AuthService {
                             .isActive(true)
                             .build());
 
-            staffService.create(
-                    StaffRequest.builder()
-                            .name(request.getName())
-                            .email(userCredential.getEmail())
-                            .address(request.getAddress())
-                            .phone(request.getPhone())
-                            .build());
+            Staff staff = staffService.create(Staff.builder()
+                    .name(request.getName())
+                    .email(userCredential.getEmail())
+                    .address(request.getAddress())
+                    .phone(request.getPhone())
+                    .userCredential(userCredential)
+                    .build());
 
             response = RegisterResponse.builder()
                     .roles(List.of(String.valueOf(role)))
-                    .email(userCredential.getEmail())
+                    .email(staff.getEmail())
                     .build();
         } catch (DataIntegrityViolationException exception) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "email sudah terdaftar");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "email was created");
+        }
+
+        log.info("end register staff");
+        return response;
+    }
+
+    @Override
+    @Transactional(rollbackOn = Exception.class)
+    public RegisterResponse registerAdmin(LoginRequest request) {
+        log.info("start register admin");
+        validationUtils.validate(request);
+
+        RegisterResponse response;
+        try {
+            Role role = roleService.getOrSave(ERole.ROLE_ADMIN);
+            UserCredential userCredential = userCredentialService.create(
+                    UserCredential.builder()
+                            .email(request.getEmail())
+                            .password(bCryptUtils.hashPassword(request.getPassword()))
+                            .roles(List.of(role))
+                            .isActive(true)
+                            .build());
+
+            Admin admin = Admin.builder()
+                    .email(userCredential.getEmail())
+                    .name("Admin")
+                    .userCredential(userCredential)
+                    .build();
+
+            response = RegisterResponse.builder()
+                    .roles(List.of(String.valueOf(role)))
+                    .email(admin.getEmail())
+                    .build();
+        } catch (DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "email was created");
         }
 
         log.info("end register staff");
