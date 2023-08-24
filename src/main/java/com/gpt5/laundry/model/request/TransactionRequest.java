@@ -4,5 +4,6 @@ import java.util.List;
 
 public class TransactionRequest {
     private String customerPhone;
+    private Boolean status;
     private List<TransactionDetailRequest> orderDetails;
 }

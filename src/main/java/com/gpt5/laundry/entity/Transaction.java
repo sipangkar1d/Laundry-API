@@ -30,8 +30,8 @@ public class Transaction {
     @Column(name = "transaction_date")
     private Date transactionDate;
 
-    @Column(name = "status")
-    private Boolean status;
+    @Column(name = "is_active")
+    private Boolean isActive;
 
     @Column(name = "invoice")
     private String invoice;
@@ -40,8 +40,10 @@ public class Transaction {
     @JoinColumn(name = "customer_id")
     private Customer customer;
 
+    @ManyToOne()
+    @JoinColumn(name = "status_id")
+    private Status status;
+
     @OneToMany(mappedBy = "transaction")
     private List<TransactionDetail> orderDetails;
-
-
 }
