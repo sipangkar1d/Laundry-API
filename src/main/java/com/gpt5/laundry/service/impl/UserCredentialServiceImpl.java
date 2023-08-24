@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.transaction.Transactional;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -81,5 +82,10 @@ public class UserCredentialServiceImpl implements UserCredentialService {
         userCredentialRepository.save(userCredential);
 
         log.info("end deactivate user credential");
+    }
+
+    @Override
+    public Optional<UserCredential> getDefaultUser(String email) {
+        return userCredentialRepository.findByEmail(email);
     }
 }

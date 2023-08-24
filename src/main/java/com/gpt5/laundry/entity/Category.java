@@ -13,14 +13,15 @@ import java.util.List;
 @NoArgsConstructor
 @Entity
 @Table(name = "m_category")
-public class Category extends BaseAuditor<String>{
+public class
+Category extends BaseAuditor<String>{
     @Id
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @GeneratedValue(generator = "uuid2")
     @Column(name = "category_id")
     private String id;
 
-    @Column(name = "name")
+    @Column(name = "name", unique = true)
     private String name;
 
     @Column(name = "description")

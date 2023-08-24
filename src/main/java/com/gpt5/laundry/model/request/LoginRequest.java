@@ -1,10 +1,12 @@
 package com.gpt5.laundry.model.request;
 
+import lombok.Builder;
 import lombok.Getter;
 
 import javax.validation.constraints.NotBlank;
 
 @Getter
+@Builder(toBuilder = true)
 public class LoginRequest {
     @NotBlank(message = "email tidak boleh kosong")
     private String email;
