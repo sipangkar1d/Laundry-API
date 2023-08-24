@@ -5,6 +5,8 @@ import lombok.*;
 import java.util.List;
 
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder(toBuilder = true)
 public class LoginResponse {
     private String email;
