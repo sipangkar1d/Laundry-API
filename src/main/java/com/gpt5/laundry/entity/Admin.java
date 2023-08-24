@@ -22,10 +22,10 @@ public class Admin extends BaseAuditor<String>{
     @Column(name = "name")
     private String name;
 
-    @Column(name = "email")
+    @Column(name = "email", unique = true)
     private String email;
 
     @OneToOne
-    @JoinColumn(name = "user_credential_id")
+    @JoinColumn(name = "user_credential_id", unique = true)
     private UserCredential userCredential;
 }
