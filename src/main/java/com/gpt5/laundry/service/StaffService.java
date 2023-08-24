@@ -1,18 +1,18 @@
 package com.gpt5.laundry.service;
 
-import com.gpt5.laundry.entity.Product;
 import com.gpt5.laundry.entity.Staff;
-
-import java.util.List;
+import com.gpt5.laundry.model.request.StaffRequest;
+import com.gpt5.laundry.model.response.StaffResponse;
+import org.springframework.data.domain.Page;
 
 public interface StaffService {
-    Staff create(Staff product);
+    Staff create(StaffRequest request);
 
     Staff getById(String id);
 
-    List<Staff> getAll();
+    Page<StaffResponse> getAll(String keyword, Integer page, Integer size);
 
-    Staff update(Staff product);
+    StaffResponse update(Staff product);
 
     void deleteById(String id);
 }

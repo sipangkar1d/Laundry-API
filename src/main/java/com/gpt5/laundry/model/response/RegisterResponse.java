@@ -8,6 +8,8 @@ import lombok.NoArgsConstructor;
 import java.util.List;
 
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 @Builder(toBuilder = true)
 public class RegisterResponse {
     private String email;

@@ -22,16 +22,16 @@ public class Staff extends BaseAuditor<String>{
     @Column(name = "name")
     private String name;
 
-    @Column(name = "email")
+    @Column(name = "email", unique = true)
     private String email;
 
-    @Column(name = "phone")
+    @Column(name = "phone", unique = true)
     private String phone;
 
     @Column(name = "address")
     private String address;
 
     @OneToOne
-    @JoinColumn(name = "user_credential_id")
+    @JoinColumn(name = "user_credential_id", unique = true)
     private UserCredential userCredential;
 }
