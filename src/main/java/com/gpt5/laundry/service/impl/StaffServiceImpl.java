@@ -1,7 +1,6 @@
 package com.gpt5.laundry.service.impl;
 
 import com.gpt5.laundry.entity.Staff;
-import com.gpt5.laundry.model.request.StaffRequest;
 import com.gpt5.laundry.model.response.StaffResponse;
 import com.gpt5.laundry.repository.StaffRepository;
 import com.gpt5.laundry.service.StaffService;
@@ -27,16 +26,10 @@ public class StaffServiceImpl implements StaffService {
     private final UserCredentialService userCredentialService;
 
     @Override
-    public Staff create(StaffRequest request) {
+    public Staff create(Staff request) {
         log.info("start create staff");
 
-        Staff staff = staffRepository.saveAndFlush(
-                Staff.builder()
-                        .name(request.getName())
-                        .phone(request.getPhone())
-                        .email(request.getEmail())
-                        .address(request.getAddress())
-                        .build());
+        Staff staff = staffRepository.saveAndFlush(request);
 
         log.info("end create staff");
         return staff;
@@ -82,7 +75,7 @@ public class StaffServiceImpl implements StaffService {
     @Override
     @Transactional(rollbackOn = Exception.class)
     public StaffResponse update(Staff request) {
-        log.info("start update staff");
+        log.info("start deactivate staff");
 
         Staff staff = getById(request.getId());
 
@@ -92,7 +85,7 @@ public class StaffServiceImpl implements StaffService {
         staff.setPhone(request.getPhone());
         Staff save = staffRepository.save(staff);
 
-        log.info("end update staff");
+        log.info("end deactivate staff");
         return StaffResponse.builder()
                 .name(save.getName())
                 .email(save.getEmail())
