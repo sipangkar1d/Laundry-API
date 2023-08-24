@@ -5,10 +5,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Getter
 @Builder(toBuilder = true)
-public class CommonResponse<T> {
-    private Integer statusCode;
-    private String message;
-    private T data;
+public class RegisterResponse {
+    private String email;
+    private List<String> roles;
 }

@@ -11,20 +11,21 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "m_softener")
-public class Softener extends BaseAuditor<String>{
+@Table(name = "m_product_price")
+public class ProductPrice extends BaseAuditor<String> {
     @Id
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @GeneratedValue(generator = "uuid2")
-    @Column(name = "softener_id")
+    @Column(name = "product_price_id")
     private String id;
-
-    @Column(name = "name")
-    private String name;
-
-    @Column(name = "stock")
-    private Integer stock;
 
     @Column(name = "price")
     private Long price;
+
+    @Column(name = "isActive")
+    private Boolean isActive;
+
+    @ManyToOne()
+    @JoinColumn(name = "product_id")
+    private Product product;
 }

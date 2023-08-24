@@ -30,7 +30,7 @@ public class TransactionDetail {
 
     @ManyToOne()
     @JoinColumn(name = "softener_id")
-    private Softener softener;
+    private ProductPrice softener;
 
     @ManyToOne()
     @JoinColumn(name = "category_price_id")
