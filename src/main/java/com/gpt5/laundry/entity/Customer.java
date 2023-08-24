@@ -22,7 +22,7 @@ public class Customer extends BaseAuditor<String>{
     @Column(name = "name")
     private String name;
 
-    @Column(name = "phone")
+    @Column(name = "phone", unique = true)
     private String phone;
 
     @Column(name = "address")

@@ -1,8 +1,7 @@
 package com.gpt5.laundry.service;
 
 import com.gpt5.laundry.entity.Customer;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
 
 public interface CustomerService {
     Customer create(Customer customer);
@@ -11,5 +10,5 @@ public interface CustomerService {
 
     Customer getById(String id);
 
-    List<Customer> getAll();
+    Page<Customer> getAll(String keyword, Integer page, Integer size);
 }

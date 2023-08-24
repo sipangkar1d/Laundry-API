@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -47,7 +48,7 @@ public class StaffServiceImpl implements StaffService {
     }
 
     @Override
-    public Page<StaffResponse> getAll(String name, Integer page, Integer size) {
+    public Page<StaffResponse> getAll(String name, Integer page, Integer size, String sortBy, String direction) {
         log.info("start get all staff");
 
         Specification<Staff> specification = (root, query, criteriaBuilder) -> {
@@ -57,8 +58,8 @@ public class StaffServiceImpl implements StaffService {
             }
             return query.where().getRestriction();
         };
-
-        Pageable pageable = PageRequest.of(page, size);
+        Sort sorting = Sort.by(Sort.Direction.fromString(direction), sortBy);
+        Pageable pageable = PageRequest.of(page, size, sorting);
         Page<StaffResponse> staffResponses = staffRepository
                 .findAll(specification, pageable)
                 .map(staff -> StaffResponse.builder()
