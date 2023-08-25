@@ -1,12 +1,13 @@
 package com.gpt5.laundry.service;
 
 import com.gpt5.laundry.entity.Customer;
+import com.gpt5.laundry.model.request.CustomerRequest;
 import org.springframework.data.domain.Page;
 
 public interface CustomerService {
-    Customer create(Customer customer);
+    Customer create(CustomerRequest customer);
 
-    Customer update(Customer customer);
+    Customer update(CustomerRequest customer);
 
     Customer getById(String id);
 

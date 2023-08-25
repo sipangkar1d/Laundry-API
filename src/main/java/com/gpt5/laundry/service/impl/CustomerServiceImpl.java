@@ -1,6 +1,7 @@
 package com.gpt5.laundry.service.impl;
 
 import com.gpt5.laundry.entity.Customer;
+import com.gpt5.laundry.model.request.CustomerRequest;
 import com.gpt5.laundry.repository.CustomerRepository;
 import com.gpt5.laundry.service.CustomerService;
 import lombok.RequiredArgsConstructor;
@@ -23,9 +24,14 @@ public class CustomerServiceImpl implements CustomerService {
     private final CustomerRepository customerRepository;
 
     @Override
-    public Customer create(Customer customer) {
+    public Customer create(CustomerRequest request) {
         log.info("start create customer");
 
+        Customer customer = Customer.builder()
+                .name(request.getName())
+                .address(request.getAddress())
+                .phone(request.getPhone())
+                .build();
         Customer save = customerRepository.save(customer);
 
         log.info("end create customer");
@@ -33,10 +39,15 @@ public class CustomerServiceImpl implements CustomerService {
     }
 
     @Override
-    public Customer update(Customer request) {
+    public Customer update(CustomerRequest request) {
         log.info("start update customer");
-        getById(request.getId());
-        Customer save = customerRepository.save(request);
+
+        Customer customer = getById(request.getId());
+        customer.setName(request.getName());
+        customer.setAddress(request.getAddress());
+        customer.setPhone(request.getPhone());
+        Customer save = customerRepository.save(customer);
+
         log.info("end update customer");
         return save;
     }
