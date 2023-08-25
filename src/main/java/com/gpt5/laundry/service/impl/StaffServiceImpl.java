@@ -48,16 +48,23 @@ public class StaffServiceImpl implements StaffService {
     }
 
     @Override
-    public Page<StaffResponse> getAll(String name, Integer page, Integer size, String sortBy, String direction) {
+    public Page<StaffResponse> getAll(String keyword, Integer page, Integer size, String sortBy, String direction) {
         log.info("start get all staff");
 
         Specification<Staff> specification = (root, query, criteriaBuilder) -> {
-            if (!name.isEmpty()) {
-                Predicate predicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + name.toLowerCase() + "%");
+            if (!keyword.isEmpty()) {
+                Predicate predicate = criteriaBuilder.or(
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + keyword.toLowerCase() + "%"),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("address")), keyword.toLowerCase() + "%"),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), keyword.toLowerCase() + "%"),
+                        criteriaBuilder.like(criteriaBuilder.lower(root.get("phone")), keyword + "%")
+                );
                 return query.where(predicate).getRestriction();
             }
+
             return query.where().getRestriction();
         };
+
         Sort sorting = Sort.by(Sort.Direction.fromString(direction), sortBy);
         Pageable pageable = PageRequest.of(page, size, sorting);
         Page<StaffResponse> staffResponses = staffRepository

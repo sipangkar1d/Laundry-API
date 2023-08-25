@@ -11,4 +11,6 @@ public interface CustomerService {
     Customer getById(String id);
 
     Page<Customer> getAll(String keyword, Integer page, Integer size, String sortBy, String direction);
+
+    Customer getByPhone(String phone);
 }

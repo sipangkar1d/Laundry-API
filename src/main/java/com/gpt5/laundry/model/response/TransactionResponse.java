@@ -16,7 +16,8 @@ public class TransactionResponse {
     private String customerName;
     private String invoice;
     private Date date;
-    private Boolean Status;
+    private Boolean isPaid;
+    private String status;
     private Long grandTotal;
     private List<TransactionDetailResponse> transactionDetailResponses;
 }

@@ -1,15 +1,21 @@
 package com.gpt5.laundry.service;
 
 import com.gpt5.laundry.entity.Transaction;
+import com.gpt5.laundry.model.request.TransactionFilterRequest;
 import com.gpt5.laundry.model.request.TransactionRequest;
 import com.gpt5.laundry.model.response.TransactionResponse;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 public interface TransactionService {
     TransactionResponse create(TransactionRequest request);
 
-    TransactionResponse findById(String id);
+    Transaction findById(String id);
 
-    List<TransactionResponse> findAll();
+    Page<TransactionResponse> getAll(TransactionFilterRequest request);
+
+    void setIsPaid(String id);
+
+    void updateStatus(String id);
 }

@@ -14,7 +14,7 @@ public class TransactionDetailResponse {
     private Integer quantity;
     private Long price;
     private String productName;
-    private String productQuantity;
+    private Integer productQuantity;
     private Long productPrice;
     private Long subTotal;
 

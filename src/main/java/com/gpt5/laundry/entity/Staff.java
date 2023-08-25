@@ -11,7 +11,7 @@ import javax.persistence.*;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-@Table(name = "m_admin")
+@Table(name = "m_staff")
 public class Staff extends BaseAuditor<String>{
     @Id
     @GenericGenerator(name = "uuid2", strategy = "uuid2")

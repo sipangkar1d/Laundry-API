@@ -15,7 +15,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.persistence.criteria.Predicate;
-import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -73,5 +72,14 @@ public class CustomerServiceImpl implements CustomerService {
 
         log.info("end get all customer");
         return customerPage;
+    }
+
+    @Override
+    public Customer getByPhone(String phone) {
+        log.info("start get customer by phone");
+        Customer customer = customerRepository.findByPhone(phone).
+                orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "customer not found"));
+        log.info("end get customer by phone");
+        return customer;
     }
 }

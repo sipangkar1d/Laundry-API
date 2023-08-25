@@ -8,10 +8,7 @@ import com.gpt5.laundry.model.response.LoginResponse;
 import com.gpt5.laundry.model.response.RegisterResponse;
 import com.gpt5.laundry.security.BCryptUtils;
 import com.gpt5.laundry.security.JwtUtils;
-import com.gpt5.laundry.service.AuthService;
-import com.gpt5.laundry.service.RoleService;
-import com.gpt5.laundry.service.StaffService;
-import com.gpt5.laundry.service.UserCredentialService;
+import com.gpt5.laundry.service.*;
 import com.gpt5.laundry.util.ValidationUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +31,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class AuthServiceImpl implements AuthService {
     private final UserCredentialService userCredentialService;
+    private final AdminService adminService;
     private final RoleService roleService;
     private final StaffService staffService;
     private final AuthenticationManager authenticationManager;
@@ -94,27 +92,29 @@ public class AuthServiceImpl implements AuthService {
                             .roles(List.of(role))
                             .isActive(true)
                             .build());
+            Admin admin = adminService.create(
+                    Admin.builder()
+                            .email(userCredential.getEmail())
+                            .name("Admin")
+                            .userCredential(userCredential)
+                            .build());
 
-            Admin admin = Admin.builder()
-                    .email(userCredential.getEmail())
-                    .name("Admin")
-                    .userCredential(userCredential)
-                    .build();
-
+            log.info("end register admin");
             response = RegisterResponse.builder()
                     .roles(List.of(String.valueOf(role)))
-                    .email(admin.getEmail())
+                    .email(userCredential.getEmail())
                     .build();
         } catch (DataIntegrityViolationException exception) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "email was created");
         }
 
-        log.info("end register staff");
         return response;
+
     }
 
     @Override
     public LoginResponse login(LoginRequest request) {
+        log.info("start login");
         Authentication authenticate = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
                 request.getEmail(),
                 request.getPassword()
@@ -129,6 +129,7 @@ public class AuthServiceImpl implements AuthService {
                 .collect(Collectors.toList());
 
         String token = jwtUtils.generateToken(userDetail.getEmail());
+        log.info("end login");
         return LoginResponse.builder()
                 .email(userDetail.getEmail())
                 .roles(roles)

@@ -22,15 +22,12 @@ public class TransactionDetail {
     @Column(name = "quantity")
     private Integer quantity;
 
-    @Column(name = "weight")
-    private Integer weight;
-
     @Column(name = "softener_quantity")
-    private Integer softenerQuantity;
+    private Integer productQuantity;
 
     @ManyToOne()
     @JoinColumn(name = "softener_id")
-    private ProductPrice softener;
+    private ProductPrice productPrice;
 
     @ManyToOne()
     @JoinColumn(name = "category_price_id")
