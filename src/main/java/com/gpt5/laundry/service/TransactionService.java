@@ -11,6 +11,8 @@ public interface TransactionService {
 
     Transaction findById(String id);
 
+    TransactionResponse findByIdResponse(String id);
+
     Page<TransactionResponse> getAll(TransactionFilterRequest request);
 
     void setIsPaid(String id);

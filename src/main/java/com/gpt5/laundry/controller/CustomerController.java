@@ -72,13 +72,13 @@ public class CustomerController {
     }
 
 //    @GetMapping("/{id}")
-//    public ResponseEntity<?> getById(@PathVariable String id) {
-//        return ResponseEntity.status(HttpStatus.OK)
-//                .body(CommonResponse.builder()
-//                        .message("success get customer by phone")
-//                        .statusCode(HttpStatus.OK.value())
-//                        .data(customerService.getByPhone(id))
-//                        .build());
-//    }
+////    public ResponseEntity<?> getById(@PathVariable String id) {
+////        return ResponseEntity.status(HttpStatus.OK)
+////                .body(CommonResponse.builder()
+////                        .message("success get customer by phone")
+////                        .statusCode(HttpStatus.OK.value())
+////                        .data(customerService.getByPhone(id))
+////                        .build());
+////    }
 
 }

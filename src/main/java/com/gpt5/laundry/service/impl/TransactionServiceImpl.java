@@ -99,6 +99,17 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
+    public TransactionResponse findByIdResponse(String id) {
+        log.info("start get transaction by id");
+
+        Transaction transaction = transactionRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not found"));
+
+        log.info("end get transaction by id");
+        return getTransactionResponse(transaction);
+    }
+
+    @Override
     public Page<TransactionResponse> getAll(TransactionFilterRequest request) {
         log.info("start get all transaction");
 
