@@ -10,7 +10,6 @@ import com.gpt5.laundry.service.CategoryService;
 import com.gpt5.laundry.util.ValidationUtils;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.internal.metadata.facets.Validatable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;

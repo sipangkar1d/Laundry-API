@@ -6,8 +6,6 @@ import com.gpt5.laundry.model.request.TransactionRequest;
 import com.gpt5.laundry.model.response.TransactionResponse;
 import org.springframework.data.domain.Page;
 
-import java.util.List;
-
 public interface TransactionService {
     TransactionResponse create(TransactionRequest request);
 

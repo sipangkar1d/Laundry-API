@@ -7,6 +7,7 @@ import com.gpt5.laundry.model.response.RegisterResponse;
 
 public interface AuthService {
     RegisterResponse register(RegisterRequest request);
+
     RegisterResponse registerAdmin(LoginRequest request);
 
     LoginResponse login(LoginRequest request);

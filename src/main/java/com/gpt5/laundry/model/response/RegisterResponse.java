@@ -1,5 +1,6 @@
 package com.gpt5.laundry.model.response;
 
+import com.gpt5.laundry.entity.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;

@@ -1,6 +1,7 @@
 package com.gpt5.laundry.service.impl;
 
 import com.gpt5.laundry.entity.Staff;
+import com.gpt5.laundry.model.request.StaffRequest;
 import com.gpt5.laundry.model.response.StaffResponse;
 import com.gpt5.laundry.repository.StaffRepository;
 import com.gpt5.laundry.service.StaffService;
@@ -83,7 +84,7 @@ public class StaffServiceImpl implements StaffService {
 
     @Override
     @Transactional(rollbackOn = Exception.class)
-    public StaffResponse update(Staff request) {
+    public StaffResponse update(StaffRequest request) {
         log.info("start deactivate staff");
 
         Staff staff = getById(request.getId());

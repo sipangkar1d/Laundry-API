@@ -1,7 +1,6 @@
 package com.gpt5.laundry.service.impl;
 
 import com.gpt5.laundry.entity.TransactionDetail;
-import com.gpt5.laundry.model.response.TransactionDetailResponse;
 import com.gpt5.laundry.repository.TransactionDetailRepository;
 import com.gpt5.laundry.service.TransactionDetailService;
 import lombok.AllArgsConstructor;

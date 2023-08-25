@@ -6,8 +6,10 @@ import java.util.List;
 
 public interface CategoryPriceService {
     CategoryPrice create(CategoryPrice categoryPrice);
+
     CategoryPrice getById(String id);
 
     List<CategoryPrice> getAllIsActiveByCategory_Id(String id);
+
     void deactivate(CategoryPrice categoryPrice);
 }

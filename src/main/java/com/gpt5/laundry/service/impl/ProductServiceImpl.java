@@ -1,7 +1,5 @@
 package com.gpt5.laundry.service.impl;
 
-import com.gpt5.laundry.entity.Category;
-import com.gpt5.laundry.entity.CategoryPrice;
 import com.gpt5.laundry.entity.Product;
 import com.gpt5.laundry.entity.ProductPrice;
 import com.gpt5.laundry.model.request.ProductRequest;

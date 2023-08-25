@@ -65,7 +65,8 @@ public class AuthServiceImpl implements AuthService {
                     .build());
 
             response = RegisterResponse.builder()
-                    .roles(List.of(String.valueOf(role)))
+                    .roles(userCredential.getRoles().stream().map(r ->
+                            r.getRole().toString()).collect(Collectors.toList()))
                     .email(staff.getEmail())
                     .build();
         } catch (DataIntegrityViolationException exception) {
@@ -92,16 +93,16 @@ public class AuthServiceImpl implements AuthService {
                             .roles(List.of(role))
                             .isActive(true)
                             .build());
-            Admin admin = adminService.create(
-                    Admin.builder()
-                            .email(userCredential.getEmail())
-                            .name("Admin")
-                            .userCredential(userCredential)
-                            .build());
+            adminService.create(Admin.builder()
+                    .email(userCredential.getEmail())
+                    .name("Admin")
+                    .userCredential(userCredential)
+                    .build());
 
             log.info("end register admin");
             response = RegisterResponse.builder()
-                    .roles(List.of(String.valueOf(role)))
+                    .roles(userCredential.getRoles().stream().map(r ->
+                            r.getRole().toString()).collect(Collectors.toList()))
                     .email(userCredential.getEmail())
                     .build();
         } catch (DataIntegrityViolationException exception) {
