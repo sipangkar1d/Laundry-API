@@ -15,4 +15,6 @@ public interface ProductService {
     ProductResponse update(ProductRequest request);
 
     void deleteById(String id);
+
+    void updateStock(String id, Integer stock);
 }

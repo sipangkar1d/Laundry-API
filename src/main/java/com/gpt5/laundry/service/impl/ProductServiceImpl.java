@@ -151,4 +151,11 @@ public class ProductServiceImpl implements ProductService {
         productRepository.delete(product);
         log.info("end delete product");
     }
+
+    @Override
+    public void updateStock(String id, Integer stock) {
+        Product product = getById(id);
+        product.setStock(stock);
+        productRepository.save(product);
+    }
 }

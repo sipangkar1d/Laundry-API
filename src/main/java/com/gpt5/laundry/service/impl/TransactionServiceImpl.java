@@ -59,7 +59,14 @@ public class TransactionServiceImpl implements TransactionService {
             List<CategoryPrice> categoryPrices = categoryPriceService.getAllIsActiveByCategory_Id(category.getId());
 
             Product product = productService.getById(transactionDetailRequest.getProductId());
+            if (product.getStock() < transactionDetailRequest.getProductQuantity()) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "stock not found");
+            }
+            product.setStock(product.getStock() - transactionDetailRequest.getProductQuantity());
+            productService.updateStock(product.getId(), product.getStock());
+
             List<ProductPrice> productPrices = productPriceService.getProductPriceIsActiveAndProduct_Id(product.getId());
+
 
             return transactionDetailService.create(
                     TransactionDetail.builder()
