@@ -66,7 +66,7 @@ public class CustomerServiceImpl implements CustomerService {
         log.info("start get all customer");
 
         Specification<Customer> specification = (root, query, criteriaBuilder) -> {
-            if (!keyword.isEmpty()) {
+            if (keyword != null) {
                 Predicate predicate = criteriaBuilder.or(
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + keyword.toLowerCase() + "%"),
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("address")), keyword.toLowerCase() + "%"),

@@ -53,7 +53,7 @@ public class StaffServiceImpl implements StaffService {
         log.info("start get all staff");
 
         Specification<Staff> specification = (root, query, criteriaBuilder) -> {
-            if (!keyword.isEmpty()) {
+            if (keyword != null) {
                 Predicate predicate = criteriaBuilder.or(
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + keyword.toLowerCase() + "%"),
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("address")), keyword.toLowerCase() + "%"),

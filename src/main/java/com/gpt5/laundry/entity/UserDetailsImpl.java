@@ -8,7 +8,7 @@ import java.util.Collection;
 
 @Getter
 @Setter
-@AllArgsConstructor
+@AllArgsConstructor@Data
 @NoArgsConstructor
 @Builder(toBuilder = true)
 public class UserDetailsImpl implements UserDetails {

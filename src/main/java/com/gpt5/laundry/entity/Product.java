@@ -26,7 +26,7 @@ public class Product {
     @Column(name = "stock", columnDefinition = "int check (stock>=0)")
     private Integer stock;
 
-    @OneToMany(mappedBy = "product")
+    @OneToMany(mappedBy = "product", cascade = CascadeType.REMOVE)
     private List<ProductPrice> productPrices;
 
     public void addProductPrices(ProductPrice productPrice) {

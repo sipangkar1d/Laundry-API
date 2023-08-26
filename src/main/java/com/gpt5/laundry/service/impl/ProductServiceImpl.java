@@ -10,6 +10,7 @@ import com.gpt5.laundry.service.ProductService;
 import com.gpt5.laundry.util.ValidationUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -38,21 +39,26 @@ public class ProductServiceImpl implements ProductService {
         log.info("start create product");
         validationUtils.validate(request);
 
-        Product product = productRepository.saveAndFlush(
-                Product.builder()
-                        .name(request.getName())
-                        .stock(request.getStock())
-                        .build());
+        Product product;
+        ProductPrice productPrice;
+        try {
+            product = productRepository.saveAndFlush(
+                    Product.builder()
+                            .name(request.getName())
+                            .stock(request.getStock())
+                            .build());
 
-        ProductPrice productPrice = productPriceService.create(
-                ProductPrice.builder()
-                        .price(request.getPrice())
-                        .product(product)
-                        .isActive(true)
-                        .build());
+            productPrice = productPriceService.create(
+                    ProductPrice.builder()
+                            .price(request.getPrice())
+                            .product(product)
+                            .isActive(true)
+                            .build());
 
-        product.setProductPrices(List.of(productPrice));
-        productRepository.save(product);
+            product.setProductPrices(List.of(productPrice));
+        } catch (DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Duplicate name of product");
+        }
 
         log.info("end create product");
         return ProductResponse.builder()
@@ -92,6 +98,7 @@ public class ProductServiceImpl implements ProductService {
                 .map(product -> {
                     List<ProductPrice> productPriceIsActiveAndProductId = productPriceService.getProductPriceIsActiveAndProduct_Id(product.getId());
                     return ProductResponse.builder()
+                            .name(product.getName())
                             .id(product.getId())
                             .stock(product.getStock())
                             .price(productPriceIsActiveAndProductId.get(0).getPrice())

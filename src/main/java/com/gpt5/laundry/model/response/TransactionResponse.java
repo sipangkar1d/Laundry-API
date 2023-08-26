@@ -13,6 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @Builder(toBuilder = true)
 public class TransactionResponse {
+    private String id;
     private String customerName;
     private String invoice;
     private Date date;

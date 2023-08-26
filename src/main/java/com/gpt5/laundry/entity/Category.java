@@ -27,7 +27,7 @@ Category extends BaseAuditor<String> {
     @Column(name = "description")
     private String description;
 
-    @OneToMany(mappedBy = "category")
+    @OneToMany(mappedBy = "category", cascade = CascadeType.REMOVE)
     private List<CategoryPrice> categoryPrices;
 
     public void addCategoryPrice(CategoryPrice categoryPrice) {

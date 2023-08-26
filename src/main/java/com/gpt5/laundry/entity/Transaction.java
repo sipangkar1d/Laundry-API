@@ -59,6 +59,6 @@ public class Transaction {
     @Column(name = "updated_at")
     protected Date updatedDate;
 
-    @OneToMany(mappedBy = "transaction")
+    @OneToMany(mappedBy = "transaction", cascade = CascadeType.PERSIST)
     private List<TransactionDetail> transactionDetails;
 }

@@ -19,10 +19,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -62,6 +66,7 @@ public class TransactionServiceImpl implements TransactionService {
             if (product.getStock() < transactionDetailRequest.getProductQuantity()) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "stock not found");
             }
+
             product.setStock(product.getStock() - transactionDetailRequest.getProductQuantity());
             productService.updateStock(product.getId(), product.getStock());
 
@@ -117,11 +122,32 @@ public class TransactionServiceImpl implements TransactionService {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), sorting);
 
         Specification<Transaction> specification = (root, query, criteriaBuilder) -> {
-            if (!request.getKeyword().isEmpty()) {
-                Predicate predicate = criteriaBuilder.like(root.get("invoice"), request.getKeyword());
-                return query.where(predicate).getRestriction();
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (request.getKeyword() != null) {
+                predicates.add(criteriaBuilder.like(root.get("invoice"), request.getKeyword()));
             }
-            return query.where().getRestriction();
+            if (request.getMonth() != null && request.getYear() != null) {
+                Path<Date> transactionDatePath = root.get("transactionDate");
+                Expression<Integer> transactionMonth = criteriaBuilder.function("MONTH", Integer.class, transactionDatePath);
+                Expression<Integer> transactionYear = criteriaBuilder.function("YEAR", Integer.class, transactionDatePath);
+
+                Predicate monthPredicate = criteriaBuilder.equal(transactionMonth, request.getMonth());
+                Predicate yearPredicate = criteriaBuilder.equal(transactionYear, request.getYear());
+
+                predicates.add(monthPredicate);
+                predicates.add(yearPredicate);
+            }
+
+            if (request.getDay() != null) {
+                Path<Date> transactionDatePath = root.get("transactionDate");
+                Expression<Integer> transactionDay = criteriaBuilder.function("DAY", Integer.class, transactionDatePath);
+                Predicate dayPredicate = criteriaBuilder.equal(transactionDay, request.getDay());
+
+                predicates.add(dayPredicate);
+            }
+
+            return query.where(predicates.toArray(new Predicate[]{})).getRestriction();
         };
 
         Page<TransactionResponse> transactionResponses = transactionRepository.findAll(specification, pageable)
@@ -148,7 +174,7 @@ public class TransactionServiceImpl implements TransactionService {
         log.info("start set is paid");
         Transaction transaction = findById(id);
 
-        if (transaction.getStatus().getStatus() == EStatus.PENDING) {
+        if (transaction.getStatus().getStatus().name().equals(EStatus.PENDING.name())) {
             if (transaction.getIsPaid()) {
                 transaction.setStatus(statusService.getOrSave(EStatus.FINISHED));
             } else {
@@ -166,7 +192,7 @@ public class TransactionServiceImpl implements TransactionService {
         Specification<Transaction> specification = (root, query, criteriaBuilder) -> {
             LocalDate date = LocalDate.now();
             List<Predicate> predicates = List.of(criteriaBuilder.equal(criteriaBuilder
-                    .function("DATE", LocalDate.class, root.get("transaction_date")), date));
+                    .function("DATE", LocalDate.class, root.get("transactionDate")), date));
 
             return query.where(predicates.toArray(new Predicate[]{})).getRestriction();
         };
@@ -178,7 +204,7 @@ public class TransactionServiceImpl implements TransactionService {
         LocalDate date = LocalDate.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMdd");
         String formattedDate = date.format(formatter);
-        Integer suffix = countTransactionDay();
+        Integer suffix = countTransactionDay() + 1;
         return String.format("%s-%s-%d", prefix, formattedDate, suffix);
     }
 
@@ -197,11 +223,12 @@ public class TransactionServiceImpl implements TransactionService {
 
         Long grandTotal = transactionDetailResponses.stream().mapToLong(TransactionDetailResponse::getSubTotal).sum();
         return TransactionResponse.builder()
+                .id(transaction.getId())
                 .customerName(transaction.getCustomer().getName())
                 .invoice(transaction.getInvoice())
                 .date(transaction.getTransactionDate())
                 .isPaid(transaction.getIsPaid())
-                .status(transaction.getStatus().toString())
+                .status(transaction.getStatus().getStatus().name())
                 .transactionDetailResponses(transactionDetailResponses)
                 .grandTotal(grandTotal)
                 .build();

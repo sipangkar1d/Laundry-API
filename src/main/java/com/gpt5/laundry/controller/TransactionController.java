@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/api/v1/transactions")
@@ -45,6 +47,7 @@ public class TransactionController {
             @RequestParam(name = "direction", defaultValue = "asc") String direction,
             @RequestParam(name = "page", defaultValue = "0") Integer page,
             @RequestParam(name = "size", defaultValue = "5") Integer size,
+            @RequestParam(name = "day", required = false) Integer day,
             @RequestParam(name = "month", required = false) Integer month,
             @RequestParam(name = "year", required = false) Integer year
     ) {
@@ -55,6 +58,7 @@ public class TransactionController {
                 .direction(direction)
                 .page(page)
                 .size(size)
+                .day(day)
                 .month(month)
                 .year(year)
                 .build();
@@ -88,11 +92,18 @@ public class TransactionController {
 
     @PostMapping("update-status/{id}")
     public ResponseEntity<?> updateStatus(@PathVariable String id) {
-        transactionService.setIsPaid(id);
+        transactionService.updateStatus(id);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(CommonResponse.builder()
                         .message("update status by id")
                         .statusCode(HttpStatus.OK.value())
                         .build());
+    }
+
+    @GetMapping("/export")
+    public ResponseEntity<?> exportToPDF(HttpServletResponse response) {
+
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(CommonResponse.builder().build());
     }
 }

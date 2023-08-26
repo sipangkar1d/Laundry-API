@@ -53,7 +53,6 @@ public class CategoryServiceImpl implements CategoryService {
                         .build());
 
         category.setCategoryPrices(List.of(categoryPrice));
-        categoryRepository.save(category);
 
         log.info("end create category");
         return CategoryResponse.builder()
@@ -81,7 +80,7 @@ public class CategoryServiceImpl implements CategoryService {
         Specification<Category> specification = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            if (!keyword.isEmpty()) {
+            if (keyword != null) {
                 predicates.add(criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + keyword + "%"));
             }
             return query.where(predicates.toArray(new Predicate[]{})).getRestriction();

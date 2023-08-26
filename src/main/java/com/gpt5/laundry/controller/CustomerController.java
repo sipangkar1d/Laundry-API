@@ -40,10 +40,10 @@ public class CustomerController {
     @GetMapping()
     public ResponseEntity<?> getAll(
             @RequestParam(name = "keyword", required = false) String keyword,
-            @RequestParam(name = "keyword", defaultValue = "0") Integer page,
-            @RequestParam(name = "keyword", defaultValue = "5") Integer size,
-            @RequestParam(name = "keyword", defaultValue = "name") String sortBy,
-            @RequestParam(name = "keyword", defaultValue = "asc") String direction) {
+            @RequestParam(name = "page", defaultValue = "0") Integer page,
+            @RequestParam(name = "size", defaultValue = "5") Integer size,
+            @RequestParam(name = "sort-by", defaultValue = "name") String sortBy,
+            @RequestParam(name = "direction", defaultValue = "asc") String direction) {
         Page<Customer> customer = customerService.getAll(keyword, page, size, sortBy, direction);
         PagingResponse paging = PagingResponse.builder()
                 .page(page)
@@ -71,14 +71,14 @@ public class CustomerController {
                         .build());
     }
 
-//    @GetMapping("/{id}")
-////    public ResponseEntity<?> getById(@PathVariable String id) {
-////        return ResponseEntity.status(HttpStatus.OK)
-////                .body(CommonResponse.builder()
-////                        .message("success get customer by phone")
-////                        .statusCode(HttpStatus.OK.value())
-////                        .data(customerService.getByPhone(id))
-////                        .build());
-////    }
+    @GetMapping("/i/{id}")
+    public ResponseEntity<?> getById(@PathVariable String id) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(CommonResponse.builder()
+                        .message("success get customer by phone")
+                        .statusCode(HttpStatus.OK.value())
+                        .data(customerService.getById(id))
+                        .build());
+    }
 
 }
