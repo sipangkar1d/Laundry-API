@@ -4,7 +4,9 @@ import com.gpt5.laundry.entity.*;
 import com.gpt5.laundry.entity.constant.EStatus;
 import com.gpt5.laundry.model.request.TransactionFilterRequest;
 import com.gpt5.laundry.model.request.TransactionRequest;
+import com.gpt5.laundry.model.response.ExportToPdfResponse;
 import com.gpt5.laundry.model.response.TransactionDetailResponse;
+import com.gpt5.laundry.model.response.TransactionPdfExporter;
 import com.gpt5.laundry.model.response.TransactionResponse;
 import com.gpt5.laundry.repository.TransactionRepository;
 import com.gpt5.laundry.service.*;
@@ -22,7 +24,9 @@ import org.springframework.web.server.ResponseStatusException;
 import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
+import javax.servlet.http.HttpServletResponse;
 import javax.transaction.Transactional;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -121,34 +125,7 @@ public class TransactionServiceImpl implements TransactionService {
         Sort sorting = Sort.by(Sort.Direction.fromString(request.getDirection()), request.getSortBy());
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), sorting);
 
-        Specification<Transaction> specification = (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            if (request.getKeyword() != null) {
-                predicates.add(criteriaBuilder.like(root.get("invoice"), request.getKeyword()));
-            }
-            if (request.getMonth() != null && request.getYear() != null) {
-                Path<Date> transactionDatePath = root.get("transactionDate");
-                Expression<Integer> transactionMonth = criteriaBuilder.function("MONTH", Integer.class, transactionDatePath);
-                Expression<Integer> transactionYear = criteriaBuilder.function("YEAR", Integer.class, transactionDatePath);
-
-                Predicate monthPredicate = criteriaBuilder.equal(transactionMonth, request.getMonth());
-                Predicate yearPredicate = criteriaBuilder.equal(transactionYear, request.getYear());
-
-                predicates.add(monthPredicate);
-                predicates.add(yearPredicate);
-            }
-
-            if (request.getDay() != null) {
-                Path<Date> transactionDatePath = root.get("transactionDate");
-                Expression<Integer> transactionDay = criteriaBuilder.function("DAY", Integer.class, transactionDatePath);
-                Predicate dayPredicate = criteriaBuilder.equal(transactionDay, request.getDay());
-
-                predicates.add(dayPredicate);
-            }
-
-            return query.where(predicates.toArray(new Predicate[]{})).getRestriction();
-        };
+        Specification<Transaction> specification = getTransactionSpecification(request);
 
         Page<TransactionResponse> transactionResponses = transactionRepository.findAll(specification, pageable)
                 .map(TransactionServiceImpl::getTransactionResponse);
@@ -156,6 +133,7 @@ public class TransactionServiceImpl implements TransactionService {
         log.info("end get all transaction");
         return transactionResponses;
     }
+
 
     @Override
     public void setIsPaid(String id) {
@@ -186,6 +164,18 @@ public class TransactionServiceImpl implements TransactionService {
 
         transactionRepository.save(transaction);
         log.info("end set is paid");
+    }
+
+    @Override
+    public ExportToPdfResponse getTransactionForExportPdf(HttpServletResponse response, TransactionFilterRequest request) throws IOException {
+        Specification<Transaction> transactionSpecification = getTransactionSpecification(request);
+        Sort sort = Sort.by(Sort.Direction.DESC, "isPaid", "status");
+        List<Transaction> transactions = transactionRepository.findAll(transactionSpecification, sort);
+
+        TransactionPdfExporter exporter = new TransactionPdfExporter(transactions.stream().map(TransactionServiceImpl::getTransactionResponse)
+                .collect(Collectors.toList()));
+
+        return exporter.export(response);
     }
 
     private Integer countTransactionDay() {
@@ -226,11 +216,42 @@ public class TransactionServiceImpl implements TransactionService {
                 .id(transaction.getId())
                 .customerName(transaction.getCustomer().getName())
                 .invoice(transaction.getInvoice())
-                .date(transaction.getTransactionDate())
+                .date(transaction.getTransactionDate().toString())
                 .isPaid(transaction.getIsPaid())
                 .status(transaction.getStatus().getStatus().name())
                 .transactionDetailResponses(transactionDetailResponses)
                 .grandTotal(grandTotal)
                 .build();
+    }
+
+    private static Specification<Transaction> getTransactionSpecification(TransactionFilterRequest request) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (request.getKeyword() != null) {
+                predicates.add(criteriaBuilder.like(root.get("invoice"), request.getKeyword()));
+            }
+            if (request.getMonth() != null && request.getYear() != null) {
+                Path<Date> transactionDatePath = root.get("transactionDate");
+                Expression<Integer> transactionMonth = criteriaBuilder.function("MONTH", Integer.class, transactionDatePath);
+                Expression<Integer> transactionYear = criteriaBuilder.function("YEAR", Integer.class, transactionDatePath);
+
+                Predicate monthPredicate = criteriaBuilder.equal(transactionMonth, request.getMonth());
+                Predicate yearPredicate = criteriaBuilder.equal(transactionYear, request.getYear());
+
+                predicates.add(monthPredicate);
+                predicates.add(yearPredicate);
+            }
+
+            if (request.getDay() != null) {
+                Path<Date> transactionDatePath = root.get("transactionDate");
+                Expression<Integer> transactionDay = criteriaBuilder.function("DAY", Integer.class, transactionDatePath);
+                Predicate dayPredicate = criteriaBuilder.equal(transactionDay, request.getDay());
+
+                predicates.add(dayPredicate);
+            }
+
+            return query.where(predicates.toArray(new Predicate[]{})).getRestriction();
+        };
     }
 }

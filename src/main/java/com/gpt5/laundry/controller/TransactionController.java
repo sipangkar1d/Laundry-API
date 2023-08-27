@@ -3,16 +3,21 @@ package com.gpt5.laundry.controller;
 import com.gpt5.laundry.model.request.TransactionFilterRequest;
 import com.gpt5.laundry.model.request.TransactionRequest;
 import com.gpt5.laundry.model.response.CommonResponse;
+import com.gpt5.laundry.model.response.ExportToPdfResponse;
 import com.gpt5.laundry.model.response.PagingResponse;
 import com.gpt5.laundry.model.response.TransactionResponse;
 import com.gpt5.laundry.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.Date;
 
 @RestController
 @RequiredArgsConstructor
@@ -101,9 +106,28 @@ public class TransactionController {
     }
 
     @GetMapping("/export")
-    public ResponseEntity<?> exportToPDF(HttpServletResponse response) {
+    public ResponseEntity<?> exportToPDF(
+            @RequestParam(name = "day", required = false) Integer day,
+            @RequestParam(name = "month", required = false) Integer month,
+            @RequestParam(name = "year", required = false) Integer year,
+            HttpServletResponse response) throws IOException {
 
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(CommonResponse.builder().build());
+        if (month == null) {
+            month = LocalDate.now().getMonthValue();
+        }
+        if (year == null) {
+            year = LocalDate.now().getYear();
+        }
+
+        TransactionFilterRequest request = TransactionFilterRequest.builder()
+                .day(day)
+                .year(year)
+                .month(month)
+                .sortBy("status")
+                .direction(Sort.Direction.DESC.name())
+                .build();
+
+        ExportToPdfResponse exportPdf = transactionService.getTransactionForExportPdf(response, request);
+        return new ResponseEntity<>(exportPdf.getIsr(), exportPdf.getHeaders(), HttpStatus.OK);
     }
 }
