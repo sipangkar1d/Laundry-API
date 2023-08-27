@@ -3,8 +3,9 @@ package com.gpt5.laundry.service;
 import com.gpt5.laundry.entity.Transaction;
 import com.gpt5.laundry.model.request.TransactionFilterRequest;
 import com.gpt5.laundry.model.request.TransactionRequest;
-import com.gpt5.laundry.model.response.ExportToPdfResponse;
+import com.gpt5.laundry.model.response.ExportPdfResponse;
 import com.gpt5.laundry.model.response.TransactionResponse;
+import com.twilio.rest.api.v2010.account.Message;
 import org.springframework.data.domain.Page;
 
 import javax.servlet.http.HttpServletResponse;
@@ -23,5 +24,5 @@ public interface TransactionService {
 
     void updateStatus(String id);
 
-    ExportToPdfResponse getTransactionForExportPdf(HttpServletResponse response,TransactionFilterRequest request) throws IOException;
+    ExportPdfResponse exportToPdf(HttpServletResponse response, TransactionFilterRequest request) throws IOException;
 }

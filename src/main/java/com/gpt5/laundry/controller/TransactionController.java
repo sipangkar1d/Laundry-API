@@ -1,11 +1,13 @@
 package com.gpt5.laundry.controller;
 
+import com.gpt5.laundry.model.request.NotificationRequest;
 import com.gpt5.laundry.model.request.TransactionFilterRequest;
 import com.gpt5.laundry.model.request.TransactionRequest;
 import com.gpt5.laundry.model.response.CommonResponse;
-import com.gpt5.laundry.model.response.ExportToPdfResponse;
+import com.gpt5.laundry.model.response.ExportPdfResponse;
 import com.gpt5.laundry.model.response.PagingResponse;
 import com.gpt5.laundry.model.response.TransactionResponse;
+import com.gpt5.laundry.service.NotificationService;
 import com.gpt5.laundry.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -17,13 +19,13 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.Date;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping(path = "/api/v1/transactions")
 public class TransactionController {
     private final TransactionService transactionService;
+    private final NotificationService notificationService;
 
     @PostMapping()
     public ResponseEntity<?> create(@RequestBody TransactionRequest request) {
@@ -127,7 +129,7 @@ public class TransactionController {
                 .direction(Sort.Direction.DESC.name())
                 .build();
 
-        ExportToPdfResponse exportPdf = transactionService.getTransactionForExportPdf(response, request);
+        ExportPdfResponse exportPdf = transactionService.exportToPdf(response, request);
         return new ResponseEntity<>(exportPdf.getIsr(), exportPdf.getHeaders(), HttpStatus.OK);
     }
 }

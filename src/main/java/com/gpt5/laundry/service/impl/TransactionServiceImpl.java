@@ -2,14 +2,17 @@ package com.gpt5.laundry.service.impl;
 
 import com.gpt5.laundry.entity.*;
 import com.gpt5.laundry.entity.constant.EStatus;
+import com.gpt5.laundry.model.request.NotificationRequest;
 import com.gpt5.laundry.model.request.TransactionFilterRequest;
 import com.gpt5.laundry.model.request.TransactionRequest;
-import com.gpt5.laundry.model.response.ExportToPdfResponse;
+import com.gpt5.laundry.model.response.ExportPdfResponse;
 import com.gpt5.laundry.model.response.TransactionDetailResponse;
 import com.gpt5.laundry.model.response.TransactionPdfExporter;
 import com.gpt5.laundry.model.response.TransactionResponse;
 import com.gpt5.laundry.repository.TransactionRepository;
 import com.gpt5.laundry.service.*;
+import com.gpt5.laundry.util.ValidationUtils;
+import com.twilio.rest.api.v2010.account.Message;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -40,17 +43,21 @@ import java.util.stream.Collectors;
 public class TransactionServiceImpl implements TransactionService {
     private final TransactionRepository transactionRepository;
     private final TransactionDetailService transactionDetailService;
-    private final CustomerService customerService;
     private final CategoryPriceService categoryPriceService;
-    private final CategoryService categoryService;
     private final ProductPriceService productPriceService;
+    private final NotificationService notificationService;
+    private final CategoryService categoryService;
+    private final CustomerService customerService;
     private final ProductService productService;
     private final StatusService statusService;
+    private final ValidationUtils validationUtils;
 
     @Override
     @Transactional(rollbackOn = Exception.class)
     public TransactionResponse create(TransactionRequest request) {
         log.info("start transaction");
+        validationUtils.validate(request);
+
         Customer customer = customerService.getByPhone(request.getCustomerPhone());
         String invoice = createInvoice();
 
@@ -76,7 +83,6 @@ public class TransactionServiceImpl implements TransactionService {
 
             List<ProductPrice> productPrices = productPriceService.getProductPriceIsActiveAndProduct_Id(product.getId());
 
-
             return transactionDetailService.create(
                     TransactionDetail.builder()
                             .categoryPrice(categoryPrices.get(0))
@@ -90,9 +96,66 @@ public class TransactionServiceImpl implements TransactionService {
         transaction.setTransactionDetails(transactionDetails);
         transactionRepository.save(transaction);
 
-        log.info("end transaction");
+        Message message = sendNotificationToCustomer(transaction, customer);
+        if (message.getErrorCode() != null || message.getErrorMessage() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "any problem when send notification");
+        }
 
+        log.info("end transaction");
         return getTransactionResponse(transaction);
+    }
+
+    private Message sendNotificationToCustomer(Transaction transaction, Customer customer) {
+        List<TransactionDetail> transactionDetails = transaction.getTransactionDetails();
+        StringBuilder getDetailMessage = new StringBuilder();
+        long total = 0L;
+
+        for (TransactionDetail transactionDetail : transactionDetails) {
+            getDetailMessage
+                    .append(transactionDetail.getCategoryPrice().getCategory().getName())
+                    .append(" @ Rp").append(transactionDetail.getCategoryPrice().getPrice()).append(",-\n")
+                    .append("Ket: ").append(transactionDetail.getQuantity()).append(" pcs").append(",-\n")
+                    .append(transactionDetail.getProductPrice().getProduct().getName())
+                    .append(" @ Rp").append(transactionDetail.getProductPrice().getPrice()).append(",-\n")
+                    .append("Ket: ").append(transactionDetail.getProductQuantity()).append(" pcs").append(",-\n");
+
+            total += (transactionDetail.getCategoryPrice().getPrice() +
+                    (transactionDetail.getProductPrice().getPrice() * transactionDetail.getProductQuantity()));
+        }
+
+        String remaining = transaction.getIsPaid() ? "Rp 0,-" : String.valueOf(total);
+        String status = transaction.getIsPaid() ? "Lunas" : "Belum Lunas";
+        return notificationService.sendNotification(
+                NotificationRequest.builder()
+                        .toPhoneNumber(customer.getPhone())
+                        .message("*FAKTUR ELEKTRONIK*" + "\n"
+                                + "GPT-5 Laundry" + "\n"
+                                + "Jl. H Dahlan, South Jakarta 628234567890" + "\n"
+                                + "\n"
+                                + "Pelanggan Yth," + "\n"
+                                + customer.getName() + "\n"
+                                + "\n"
+                                + "Invoice" + "\n"
+                                + transaction.getInvoice() + "\n"
+                                + "\n"
+                                + "Terima:" + "\n"
+                                + transaction.getTransactionDate().toString() + "\n"
+                                + "\n"
+                                + "=".repeat(20) + "\n"
+                                + getDetailMessage
+                                + "=".repeat(20) + "\n"
+                                + "Detail biaya :" + "\n"
+                                + "Total tagihan : " + total + "\n"
+                                + "Sisa tagihan : " + remaining + "\n"
+                                + "\n"
+                                + "Status: " + status + "\n"
+                                + "=".repeat(20) + "\n"
+                                + "Syarat & ketentuan: " + "\n"
+                                + "PERHATIAN:" + "\n"
+                                + "JIKA MENERIMA PESAN NOTA INI, MAKA KONSUMEN DIANGGAP SETUJU DENGAN KETENTUAN LAYANAN GPT-5 LAUNDRY" + "\n"
+                                + "\n"
+                                + "Note : mohon konsumen untuk membaca ketentuan sebelum meninggalkan outlet kami"
+                        ).build());
     }
 
 
@@ -102,6 +165,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         Transaction transaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not found"));
+        Customer customer = transaction.getCustomer();
 
         log.info("end get transaction by id");
         return transaction;
@@ -152,7 +216,7 @@ public class TransactionServiceImpl implements TransactionService {
         log.info("start set is paid");
         Transaction transaction = findById(id);
 
-        if (transaction.getStatus().getStatus().name().equals(EStatus.PENDING.name())) {
+        if (transaction.getStatus().getStatus().equals(EStatus.PENDING)) {
             if (transaction.getIsPaid()) {
                 transaction.setStatus(statusService.getOrSave(EStatus.FINISHED));
             } else {
@@ -160,6 +224,25 @@ public class TransactionServiceImpl implements TransactionService {
             }
         } else {
             transaction.setStatus(statusService.getOrSave(EStatus.PENDING));
+            Message message = notificationService.sendNotification(
+                    NotificationRequest.builder()
+                            .toPhoneNumber(transaction.getCustomer().getPhone())
+                            .message("*FAKTUR ELEKTRONIK*" + "\n"
+                                    + "GPT-5 Laundry" + "\n"
+                                    + "Jl. H Dahlan, South Jakarta 628234567890" + "\n"
+                                    + "\n"
+                                    + "Pelanggan Yth," + "\n"
+                                    + transaction.getCustomer().getName() + "\n"
+                                    + "\n"
+                                    + "Invoice" + "\n"
+                                    + transaction.getInvoice() + "\n"
+                                    + "\n"
+                                    + "*Informasi bahwa laundry anda sudah selesai dan sudah dapat diambil*"
+                                    + "\n")
+                            .build());
+            if (message.getErrorCode() != null || message.getErrorMessage() != null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "any problem when send notification");
+            }
         }
 
         transactionRepository.save(transaction);
@@ -167,7 +250,7 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public ExportToPdfResponse getTransactionForExportPdf(HttpServletResponse response, TransactionFilterRequest request) throws IOException {
+    public ExportPdfResponse exportToPdf(HttpServletResponse response, TransactionFilterRequest request) throws IOException {
         Specification<Transaction> transactionSpecification = getTransactionSpecification(request);
         Sort sort = Sort.by(Sort.Direction.DESC, "isPaid", "status");
         List<Transaction> transactions = transactionRepository.findAll(transactionSpecification, sort);
@@ -177,6 +260,7 @@ public class TransactionServiceImpl implements TransactionService {
 
         return exporter.export(response);
     }
+
 
     private Integer countTransactionDay() {
         Specification<Transaction> specification = (root, query, criteriaBuilder) -> {

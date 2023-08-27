@@ -7,7 +7,7 @@ import org.springframework.http.HttpHeaders;
 
 @Builder(toBuilder = true)
 @Getter
-public class ExportToPdfResponse {
+public class ExportPdfResponse {
     private InputStreamResource isr;
     private HttpHeaders headers;
 }

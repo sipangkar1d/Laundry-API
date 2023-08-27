@@ -82,7 +82,7 @@ public class TransactionPdfExporter {
         table.addCell(String.valueOf(revenue));
     }
 
-    public ExportToPdfResponse export(HttpServletResponse response) throws IOException {
+    public ExportPdfResponse export(HttpServletResponse response) throws IOException {
         Document document = new Document(PageSize.A4.rotate());
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
         PdfWriter.getInstance(document, baos);
@@ -138,7 +138,7 @@ public class TransactionPdfExporter {
         ByteArrayInputStream bis = new ByteArrayInputStream(baos.toByteArray());
         InputStreamResource isr = new InputStreamResource(bis);
 
-        return ExportToPdfResponse.builder()
+        return ExportPdfResponse.builder()
                 .headers(headers)
                 .isr(isr)
                 .build();
