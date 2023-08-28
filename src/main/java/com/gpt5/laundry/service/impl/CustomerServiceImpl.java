@@ -93,4 +93,12 @@ public class CustomerServiceImpl implements CustomerService {
         log.info("end get customer by phone");
         return customer;
     }
+
+    @Override
+    public Integer countCustomer() {
+        log.info("start count customer");
+        Integer size = customerRepository.findAll().size();
+        log.info("end count customer");
+        return size;
+    }
 }
