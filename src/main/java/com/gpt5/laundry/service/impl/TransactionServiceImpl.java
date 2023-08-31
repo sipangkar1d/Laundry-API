@@ -244,10 +244,11 @@ public class TransactionServiceImpl implements TransactionService {
         Transaction transaction = findById(id);
 
         Revenue revenue = revenueService.create(Revenue.builder()
-                        .revenue(transaction.getTransactionDetails().stream().mapToLong(
-                                transactionDetail -> transactionDetail.getCategoryPrice().getPrice()
-                                        + (transactionDetail.getProductQuantity() * transactionDetail.getProductPrice().getPrice()))
-                                .sum()).build());
+                .transaction(transaction)
+                .revenue(transaction.getTransactionDetails().stream()
+                        .mapToLong(transactionDetail -> transactionDetail.getCategoryPrice().getPrice()
+                                + (transactionDetail.getProductQuantity() * transactionDetail.getProductPrice().getPrice()))
+                        .sum()).build());
 
         transaction.setIsPaid(true);
         transactionRepository.save(transaction);
@@ -261,7 +262,7 @@ public class TransactionServiceImpl implements TransactionService {
     @Override
     @Transactional(rollbackOn = Exception.class)
     public void updateStatus(String id) {
-        log.info("start set is paid");
+        log.info("start update status");
         Transaction transaction = findById(id);
 
         if (transaction.getStatus().getStatus().equals(EStatus.PENDING)) {
@@ -298,9 +299,8 @@ public class TransactionServiceImpl implements TransactionService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "any problem when send notification");
             }
         }
-
         transactionRepository.save(transaction);
-        log.info("end set is paid");
+        log.info("end update status");
     }
 
     @Override

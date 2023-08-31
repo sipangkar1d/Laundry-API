@@ -1,6 +1,7 @@
 package com.gpt5.laundry.service.impl;
 
 import com.gpt5.laundry.entity.Staff;
+import com.gpt5.laundry.entity.UserCredential;
 import com.gpt5.laundry.model.request.StaffRequest;
 import com.gpt5.laundry.model.response.StaffResponse;
 import com.gpt5.laundry.repository.StaffRepository;
@@ -17,8 +18,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
+import java.util.ArrayList;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -49,21 +53,42 @@ public class StaffServiceImpl implements StaffService {
     }
 
     @Override
+    public StaffResponse getByIdResponse(String id) {
+        log.info("start get staff by id");
+
+        Staff staff = staffRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "staff not found"));
+
+        log.info("end get staff by id");
+        return StaffResponse.builder()
+                .id(staff.getId())
+                .name(staff.getName())
+                .email(staff.getEmail())
+                .phone(staff.getPhone())
+                .address(staff.getAddress())
+                .build();
+    }
+
+    @Override
     public Page<StaffResponse> getAll(String keyword, Integer page, Integer size, String sortBy, String direction) {
         log.info("start get all staff");
 
         Specification<Staff> specification = (root, query, criteriaBuilder) -> {
+            Join<Staff, UserCredential> userCredentialJoin = root.join("userCredential");
+
+            List<Predicate> predicates = new ArrayList<>();
+
+            predicates.add(criteriaBuilder.isTrue(userCredentialJoin.get("isActive")));
+
             if (keyword != null) {
-                Predicate predicate = criteriaBuilder.or(
+                predicates.add(criteriaBuilder.or(
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + keyword.toLowerCase() + "%"),
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("address")), keyword.toLowerCase() + "%"),
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("email")), keyword.toLowerCase() + "%"),
                         criteriaBuilder.like(criteriaBuilder.lower(root.get("phone")), keyword + "%")
-                );
-                return query.where(predicate).getRestriction();
+                ));
             }
-
-            return query.where().getRestriction();
+            return query.where(predicates.toArray(new Predicate[]{})).getRestriction();
         };
 
         Sort sorting = Sort.by(Sort.Direction.fromString(direction), sortBy);

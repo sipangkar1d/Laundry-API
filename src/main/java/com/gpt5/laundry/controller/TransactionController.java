@@ -124,7 +124,7 @@ public class TransactionController {
     @GetMapping("/export")
     public ResponseEntity<?> exportToPDF(
             @RequestParam(name = "size") Integer size,
-            @RequestParam(name = "page") Integer page,
+            @RequestParam(name = "page", defaultValue = "0") Integer page,
             HttpServletResponse response) throws IOException {
         TransactionFilterRequest request = TransactionFilterRequest.builder()
                 .size(size)

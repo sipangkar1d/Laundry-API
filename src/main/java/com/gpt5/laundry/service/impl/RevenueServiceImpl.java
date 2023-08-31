@@ -53,7 +53,7 @@ public class RevenueServiceImpl implements RevenueService {
 
         Long sum = revenueRepository.findAll(specification).stream()
                 .filter(revenue -> revenue.getTransaction().getIsPaid())
-                .mapToLong(Revenue::getRevenue).sum();
+                .mapToLong(revenue -> revenue.getRevenue()).sum();
 
         log.info("end get total revenue");
         return sum;

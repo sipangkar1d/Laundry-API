@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -32,23 +33,38 @@ public class ActivityServiceImpl implements ActivityService {
         log.info("end create activity");
         return saved;
     }
+
     @Override
     public List<ActivityResponse> getAll() {
         log.info("start get activities");
 
-        Sort sorting = Sort.by(Sort.Direction.fromString("asc"), "activityTime");
+        Sort sorting = Sort.by(Sort.Direction.fromString("desc"), "activityTime");
         Pageable pageable = PageRequest.of(0, 6, sorting);
         Specification<Activity> specification = (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
             Date now = new Date();
 
-            java.sql.Date today = new java.sql.Date(now.getTime());
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(now);
+
+            // Set waktu mulai hari ini (jam 00:00:00)
+            calendar.set(Calendar.HOUR_OF_DAY, 0);
+            calendar.set(Calendar.MINUTE, 0);
+            calendar.set(Calendar.SECOND, 0);
+            calendar.set(Calendar.MILLISECOND, 0);
+
+            Date startOfToday = calendar.getTime();
+
+            // Set waktu akhir hari ini (jam 23:59:59)
+            calendar.set(Calendar.HOUR_OF_DAY, 23);
+            calendar.set(Calendar.MINUTE, 59);
+            calendar.set(Calendar.SECOND, 59);
+
+            Date endOfToday = calendar.getTime();
 
             Path<Date> transactionDatePath = root.get("activityTime");
-            predicates.add(criteriaBuilder.greaterThanOrEqualTo(transactionDatePath, today));
-
-            java.sql.Date tomorrow = new java.sql.Date(now.getTime() + 24 * 60 * 60 * 1000);
-            predicates.add(criteriaBuilder.lessThan(transactionDatePath, tomorrow));
+            predicates.add(criteriaBuilder.greaterThanOrEqualTo(transactionDatePath, startOfToday));
+            predicates.add(criteriaBuilder.lessThanOrEqualTo(transactionDatePath, endOfToday));
 
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
         };
@@ -65,7 +81,7 @@ public class ActivityServiceImpl implements ActivityService {
         return activityResponses;
     }
 
-    private static String getDifferentTime(Date startDate){
+    private static String getDifferentTime(Date startDate) {
         Date currentDate = new Date();
 
         long timeDifferenceMillis = currentDate.getTime() - startDate.getTime();
@@ -83,7 +99,7 @@ public class ActivityServiceImpl implements ActivityService {
             result += minutes + "m";
         }
 
-        return result + " ago";
+        return result;
     }
 
 //    @Override

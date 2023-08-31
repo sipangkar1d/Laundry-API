@@ -84,7 +84,19 @@ public class StaffController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(CommonResponse.builder()
                         .statusCode(HttpStatus.OK.value())
-                        .message("Success deactivate admin")
+                        .message("Success deactivate staff")
                         .build());
     }
+
+    @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN')")
+    public ResponseEntity<?> getById(@PathVariable String id) {
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(CommonResponse.builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .data(staffService.getByIdResponse(id))
+                        .message("Success get staff")
+                        .build());
+    }
+
 }

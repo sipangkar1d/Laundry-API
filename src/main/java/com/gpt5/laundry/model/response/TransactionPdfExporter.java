@@ -130,10 +130,10 @@ public class TransactionPdfExporter {
 
         DateFormat format = new SimpleDateFormat("yyyyMMdd-HHmmss");
         String currentDate = format.format(new Date());
-
+        String fileName = "transaction" + currentDate + ".pdf";
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDispositionFormData("inline", "transaction" + currentDate + ".pdf");
+        headers.setContentDispositionFormData("inline", fileName);
 
         ByteArrayInputStream bis = new ByteArrayInputStream(baos.toByteArray());
         InputStreamResource isr = new InputStreamResource(bis);

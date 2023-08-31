@@ -9,6 +9,7 @@ public interface StaffService {
     Staff create(Staff request);
 
     Staff getById(String id);
+    StaffResponse getByIdResponse(String id);
 
     Page<StaffResponse> getAll(String keyword, Integer page, Integer size, String sortBy, String direction);
 
