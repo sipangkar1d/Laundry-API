@@ -10,6 +10,8 @@ public interface CategoryService {
 
     Category getById(String id);
 
+    CategoryResponse getByIdResponse(String id);
+
     Page<CategoryResponse> getAll(String keyword, String sortBy, String direction, Integer page, Integer size);
 
     CategoryResponse update(CategoryRequest request);

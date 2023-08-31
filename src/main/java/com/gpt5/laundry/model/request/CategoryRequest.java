@@ -16,10 +16,8 @@ public class CategoryRequest {
     private String id;
     @NotBlank(message = "name tidak boleh kosong")
     private String name;
-
     @NotBlank(message = "description tidak boleh kosong")
     private String description;
-
     @NotNull(message = "price tidak boleh kosong")
     private Long price;
 }

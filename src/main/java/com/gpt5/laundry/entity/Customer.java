@@ -12,7 +12,7 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Entity
 @Table(name = "m_customer")
-public class Customer extends BaseAuditor<String>{
+public class Customer extends BaseAuditor<String> {
     @Id
     @GenericGenerator(name = "uuid2", strategy = "uuid2")
     @GeneratedValue(generator = "uuid2")
@@ -22,7 +22,7 @@ public class Customer extends BaseAuditor<String>{
     @Column(name = "name")
     private String name;
 
-    @Column(name = "phone", unique = true)
+    @Column(name = "phone")
     private String phone;
 
     @Column(name = "address")

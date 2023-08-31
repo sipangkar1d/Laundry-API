@@ -6,6 +6,7 @@ import com.gpt5.laundry.repository.CustomerRepository;
 import com.gpt5.laundry.service.CustomerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -27,12 +28,17 @@ public class CustomerServiceImpl implements CustomerService {
     public Customer create(CustomerRequest request) {
         log.info("start create customer");
 
-        Customer customer = Customer.builder()
-                .name(request.getName())
-                .address(request.getAddress())
-                .phone(request.getPhone())
-                .build();
-        Customer save = customerRepository.save(customer);
+        Customer save;
+        try {
+            Customer customer = Customer.builder()
+                    .name(request.getName())
+                    .address(request.getAddress())
+                    .phone(request.getPhone())
+                    .build();
+            save = customerRepository.saveAndFlush(customer);
+        } catch (DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Phone already used");
+        }
 
         log.info("end create customer");
         return save;

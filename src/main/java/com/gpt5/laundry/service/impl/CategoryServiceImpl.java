@@ -75,6 +75,23 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
+    public CategoryResponse getByIdResponse(String id) {
+        log.info("start get category by id");
+
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "category not found"));
+        List<CategoryPrice> prices = categoryPriceService.getAllIsActiveByCategory_Id(category.getId());
+
+        log.info("end get category by id");
+        return CategoryResponse.builder()
+                .id(category.getId())
+                .name(category.getName())
+                .description(category.getDescription())
+                .price(prices.get(0).getPrice())
+                .build();
+    }
+
+    @Override
     public Page<CategoryResponse> getAll(String keyword, String sortBy, String direction, Integer page, Integer size) {
         log.info("start get all category");
         Specification<Category> specification = (root, query, criteriaBuilder) -> {

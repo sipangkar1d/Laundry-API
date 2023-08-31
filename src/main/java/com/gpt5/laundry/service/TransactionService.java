@@ -5,7 +5,6 @@ import com.gpt5.laundry.model.request.TransactionFilterRequest;
 import com.gpt5.laundry.model.request.TransactionRequest;
 import com.gpt5.laundry.model.response.ExportPdfResponse;
 import com.gpt5.laundry.model.response.TransactionResponse;
-import com.twilio.rest.api.v2010.account.Message;
 import org.springframework.data.domain.Page;
 
 import javax.servlet.http.HttpServletResponse;
@@ -18,7 +17,9 @@ public interface TransactionService {
 
     TransactionResponse findByIdResponse(String id);
 
-    Page<TransactionResponse> getAll(TransactionFilterRequest request);
+    Page<TransactionResponse> getAllFinishTransaction(TransactionFilterRequest request);
+
+    Page<TransactionResponse> getAllActiveTransaction(TransactionFilterRequest request);
 
     void setIsPaid(String id);
 

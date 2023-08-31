@@ -1,5 +1,6 @@
 package com.gpt5.laundry.controller;
 
+import com.gpt5.laundry.entity.Category;
 import com.gpt5.laundry.model.request.CategoryRequest;
 import com.gpt5.laundry.model.response.CategoryResponse;
 import com.gpt5.laundry.model.response.CommonResponse;
@@ -27,7 +28,7 @@ public class CategoryController {
                         .build());
     }
 
-    @GetMapping()
+    @GetMapping("")
     public ResponseEntity<?> getAll(
             @RequestParam(name = "keyword", required = false) String keyword,
             @RequestParam(name = "sort-by", defaultValue = "name") String sortBy,
@@ -67,6 +68,17 @@ public class CategoryController {
         categoryService.deleteById(id);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(CommonResponse.builder()
+                        .message("success delete category")
+                        .statusCode(HttpStatus.OK.value())
+                        .build());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getById(@PathVariable String id){
+        CategoryResponse response = categoryService.getByIdResponse(id);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(CommonResponse.builder()
+                        .data(response)
                         .message("success delete category")
                         .statusCode(HttpStatus.OK.value())
                         .build());

@@ -1,18 +1,17 @@
 package com.gpt5.laundry.entity;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import javax.persistence.*;
+import java.time.LocalDate;
 import java.util.Date;
 
 @EntityListeners(AuditingEntityListener.class)
 @Builder(toBuilder = true)
+@Getter
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -28,7 +27,6 @@ public class Activity {
     private String description;
 
     @CreatedDate
-    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "activity_time", updatable = false)
     private Date activityTime;
 }

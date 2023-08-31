@@ -85,7 +85,7 @@ public class ProductServiceImpl implements ProductService {
         log.info("start get all customer");
 
         Specification<Product> specification = (root, query, criteriaBuilder) -> {
-            if (!keyword.isEmpty()) {
+            if (keyword != null) {
                 Predicate predicate = criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + keyword.toLowerCase() + "%");
                 return query.where(predicate).getRestriction();
             }

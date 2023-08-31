@@ -9,11 +9,6 @@ import lombok.Getter;
 @Getter
 public class TransactionFilterRequest {
     private String keyword;
-    private String sortBy;
-    private String direction;
     private Integer page;
-    private Integer day;
     private Integer size;
-    private Integer month;
-    private Integer year;
 }

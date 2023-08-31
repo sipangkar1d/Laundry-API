@@ -1,13 +1,11 @@
 package com.gpt5.laundry.controller;
 
-import com.gpt5.laundry.model.request.NotificationRequest;
 import com.gpt5.laundry.model.request.TransactionFilterRequest;
 import com.gpt5.laundry.model.request.TransactionRequest;
 import com.gpt5.laundry.model.response.CommonResponse;
 import com.gpt5.laundry.model.response.ExportPdfResponse;
 import com.gpt5.laundry.model.response.PagingResponse;
 import com.gpt5.laundry.model.response.TransactionResponse;
-import com.gpt5.laundry.service.NotificationService;
 import com.gpt5.laundry.service.TransactionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -25,7 +23,6 @@ import java.time.LocalDate;
 @RequestMapping(path = "/api/v1/transactions")
 public class TransactionController {
     private final TransactionService transactionService;
-    private final NotificationService notificationService;
 
     @PostMapping()
     public ResponseEntity<?> create(@RequestBody TransactionRequest request) {
@@ -48,29 +45,19 @@ public class TransactionController {
     }
 
     @GetMapping()
-    public ResponseEntity<?> getAll(
+    public ResponseEntity<?> getAllFinishTransaction(
             @RequestParam(name = "keyword", required = false) String keyword,
-            @RequestParam(name = "sort-by", defaultValue = "invoice") String sortBy,
-            @RequestParam(name = "direction", defaultValue = "asc") String direction,
             @RequestParam(name = "page", defaultValue = "0") Integer page,
-            @RequestParam(name = "size", defaultValue = "5") Integer size,
-            @RequestParam(name = "day", required = false) Integer day,
-            @RequestParam(name = "month", required = false) Integer month,
-            @RequestParam(name = "year", required = false) Integer year
+            @RequestParam(name = "size", defaultValue = "5") Integer size
     ) {
 
         TransactionFilterRequest request = TransactionFilterRequest.builder()
                 .keyword(keyword)
-                .sortBy(sortBy)
-                .direction(direction)
                 .page(page)
                 .size(size)
-                .day(day)
-                .month(month)
-                .year(year)
                 .build();
 
-        Page<TransactionResponse> responses = transactionService.getAll(request);
+        Page<TransactionResponse> responses = transactionService.getAllFinishTransaction(request);
         PagingResponse paging = PagingResponse.builder()
                 .page(page)
                 .size(size)
@@ -83,6 +70,33 @@ public class TransactionController {
                         .message("get all transaction")
                         .statusCode(HttpStatus.OK.value())
                         .data(responses.getContent())
+                        .paging(paging)
+                        .build());
+    }
+
+    @GetMapping("/active")
+    public ResponseEntity<?> getAllActiveTransaction(
+            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "size") Integer size,
+            @RequestParam(name = "page") Integer page
+    ) {
+        TransactionFilterRequest request = TransactionFilterRequest.builder()
+                .keyword(keyword)
+                .page(page)
+                .size(size)
+                .build();
+        Page<TransactionResponse> activeTransaction = transactionService.getAllActiveTransaction(request);
+        PagingResponse paging = PagingResponse.builder()
+                .page(page)
+                .size(size)
+                .count(activeTransaction.getTotalElements())
+                .totalPages(activeTransaction.getTotalPages())
+                .build();
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(CommonResponse.builder()
+                        .statusCode(HttpStatus.OK.value())
+                        .message("get active transaction")
+                        .data(activeTransaction.getContent())
                         .paging(paging)
                         .build());
     }
@@ -109,24 +123,12 @@ public class TransactionController {
 
     @GetMapping("/export")
     public ResponseEntity<?> exportToPDF(
-            @RequestParam(name = "day", required = false) Integer day,
-            @RequestParam(name = "month", required = false) Integer month,
-            @RequestParam(name = "year", required = false) Integer year,
+            @RequestParam(name = "size") Integer size,
+            @RequestParam(name = "page") Integer page,
             HttpServletResponse response) throws IOException {
-
-        if (month == null) {
-            month = LocalDate.now().getMonthValue();
-        }
-        if (year == null) {
-            year = LocalDate.now().getYear();
-        }
-
         TransactionFilterRequest request = TransactionFilterRequest.builder()
-                .day(day)
-                .year(year)
-                .month(month)
-                .sortBy("status")
-                .direction(Sort.Direction.DESC.name())
+                .size(size)
+                .page(page)
                 .build();
 
         ExportPdfResponse exportPdf = transactionService.exportToPdf(response, request);

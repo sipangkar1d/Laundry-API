@@ -25,6 +25,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.servlet.http.HttpServletResponse;
@@ -48,6 +49,8 @@ public class TransactionServiceImpl implements TransactionService {
     private final NotificationService notificationService;
     private final CategoryService categoryService;
     private final CustomerService customerService;
+    private final ActivityService activityService;
+    private final RevenueService revenueService;
     private final ProductService productService;
     private final StatusService statusService;
     private final ValidationUtils validationUtils;
@@ -100,7 +103,9 @@ public class TransactionServiceImpl implements TransactionService {
         if (message.getErrorCode() != null || message.getErrorMessage() != null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "any problem when send notification");
         }
-
+        Activity activity = activityService.create(Activity.builder()
+                .description(String.format("laundry %s masuk antrian", customer.getName()))
+                .build());
         log.info("end transaction");
         return getTransactionResponse(transaction);
     }
@@ -165,7 +170,6 @@ public class TransactionServiceImpl implements TransactionService {
 
         Transaction transaction = transactionRepository.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "transaction not found"));
-        Customer customer = transaction.getCustomer();
 
         log.info("end get transaction by id");
         return transaction;
@@ -183,30 +187,74 @@ public class TransactionServiceImpl implements TransactionService {
     }
 
     @Override
-    public Page<TransactionResponse> getAll(TransactionFilterRequest request) {
-        log.info("start get all transaction");
+    public Page<TransactionResponse> getAllFinishTransaction(TransactionFilterRequest request) {
+        log.info("start get all transaction finish");
+        Sort sorting = Sort.by(Sort.Direction.fromString("asc"), "invoice", "isPaid");
 
-        Sort sorting = Sort.by(Sort.Direction.fromString(request.getDirection()), request.getSortBy());
+        Specification<Transaction> transactionSpecification = finishStatus();
+
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), sorting);
 
-        Specification<Transaction> specification = getTransactionSpecification(request);
+        Page<TransactionResponse> responsePage = transactionRepository.findAll(transactionSpecification, pageable).map(TransactionServiceImpl::getTransactionResponse);
 
-        Page<TransactionResponse> transactionResponses = transactionRepository.findAll(specification, pageable)
-                .map(TransactionServiceImpl::getTransactionResponse);
+        log.info("end get all transaction finish");
 
-        log.info("end get all transaction");
-        return transactionResponses;
+        return responsePage;
+    }
+
+    @Override
+    public Page<TransactionResponse> getAllActiveTransaction(TransactionFilterRequest request) {
+        log.info("start get all transaction active");
+        Sort sorting = Sort.by(Sort.Direction.fromString("asc"), "invoice", "isPaid");
+
+        Specification<Transaction> transactionSpecification = pendingOrProcessStatus();
+
+        Pageable pageable = PageRequest.of(request.getPage(), request.getSize(), sorting);
+
+        Page<TransactionResponse> responsePage = transactionRepository.findAll(transactionSpecification, pageable).map(TransactionServiceImpl::getTransactionResponse);
+
+        log.info("end get all transaction active");
+        return responsePage;
+    }
+
+    public static Specification<Transaction> hasStatus(EStatus status) {
+        return (root, query, criteriaBuilder) -> {
+            Join<Transaction, Status> statusJoin = root.join("status");
+            Path<EStatus> statusPath = statusJoin.get("status");
+
+            return criteriaBuilder.equal(statusPath, status);
+        };
+    }
+
+    public static Specification<Transaction> finishStatus() {
+        return hasStatus(EStatus.FINISHED);
+    }
+
+    public static Specification<Transaction> pendingOrProcessStatus() {
+        return hasStatus(EStatus.PENDING)
+                .or(hasStatus(EStatus.PROCESS));
     }
 
 
     @Override
+    @Transactional(rollbackOn = Exception.class)
     public void setIsPaid(String id) {
         log.info("start set is paid");
 
         Transaction transaction = findById(id);
+
+        Revenue revenue = revenueService.create(Revenue.builder()
+                        .revenue(transaction.getTransactionDetails().stream().mapToLong(
+                                transactionDetail -> transactionDetail.getCategoryPrice().getPrice()
+                                        + (transactionDetail.getProductQuantity() * transactionDetail.getProductPrice().getPrice()))
+                                .sum()).build());
+
         transaction.setIsPaid(true);
         transactionRepository.save(transaction);
 
+        Activity activity = activityService.create(Activity.builder()
+                .description(String.format("%s melakukan pembayaran", transaction.getCustomer().getName()))
+                .build());
         log.info("end set is paid");
     }
 
@@ -219,6 +267,9 @@ public class TransactionServiceImpl implements TransactionService {
         if (transaction.getStatus().getStatus().equals(EStatus.PENDING)) {
             if (transaction.getIsPaid()) {
                 transaction.setStatus(statusService.getOrSave(EStatus.FINISHED));
+                Activity activity = activityService.create(Activity.builder()
+                        .description(String.format("laundry %s sudah diambil", transaction.getCustomer().getName()))
+                        .build());
             } else {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "transaction cannot be completed before it is paid.");
             }
@@ -240,6 +291,9 @@ public class TransactionServiceImpl implements TransactionService {
                                     + "*Informasi bahwa laundry anda sudah selesai dan sudah dapat diambil*"
                                     + "\n")
                             .build());
+            Activity activity = activityService.create(Activity.builder()
+                    .description(String.format("laundry %s selesai dan siap untuk diambil", transaction.getCustomer().getName()))
+                    .build());
             if (message.getErrorCode() != null || message.getErrorMessage() != null) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "any problem when send notification");
             }
@@ -251,16 +305,10 @@ public class TransactionServiceImpl implements TransactionService {
 
     @Override
     public ExportPdfResponse exportToPdf(HttpServletResponse response, TransactionFilterRequest request) throws IOException {
-        Specification<Transaction> transactionSpecification = getTransactionSpecification(request);
-        Sort sort = Sort.by(Sort.Direction.DESC, "isPaid", "status");
-        List<Transaction> transactions = transactionRepository.findAll(transactionSpecification, sort);
-
-        TransactionPdfExporter exporter = new TransactionPdfExporter(transactions.stream().map(TransactionServiceImpl::getTransactionResponse)
-                .collect(Collectors.toList()));
-
+        List<TransactionResponse> transactionResponses = getAllFinishTransaction(request).getContent();
+        TransactionPdfExporter exporter = new TransactionPdfExporter(transactionResponses);
         return exporter.export(response);
     }
-
 
     private Integer countTransactionDay() {
         Specification<Transaction> specification = (root, query, criteriaBuilder) -> {
@@ -308,34 +356,34 @@ public class TransactionServiceImpl implements TransactionService {
                 .build();
     }
 
-    private static Specification<Transaction> getTransactionSpecification(TransactionFilterRequest request) {
-        return (root, query, criteriaBuilder) -> {
-            List<Predicate> predicates = new ArrayList<>();
-
-            if (request.getKeyword() != null) {
-                predicates.add(criteriaBuilder.like(root.get("invoice"), request.getKeyword()));
-            }
-            if (request.getMonth() != null && request.getYear() != null) {
-                Path<Date> transactionDatePath = root.get("transactionDate");
-                Expression<Integer> transactionMonth = criteriaBuilder.function("MONTH", Integer.class, transactionDatePath);
-                Expression<Integer> transactionYear = criteriaBuilder.function("YEAR", Integer.class, transactionDatePath);
-
-                Predicate monthPredicate = criteriaBuilder.equal(transactionMonth, request.getMonth());
-                Predicate yearPredicate = criteriaBuilder.equal(transactionYear, request.getYear());
-
-                predicates.add(monthPredicate);
-                predicates.add(yearPredicate);
-            }
-
-            if (request.getDay() != null) {
-                Path<Date> transactionDatePath = root.get("transactionDate");
-                Expression<Integer> transactionDay = criteriaBuilder.function("DAY", Integer.class, transactionDatePath);
-                Predicate dayPredicate = criteriaBuilder.equal(transactionDay, request.getDay());
-
-                predicates.add(dayPredicate);
-            }
-
-            return query.where(predicates.toArray(new Predicate[]{})).getRestriction();
-        };
-    }
+//    private static Specification<Transaction> getTransactionSpecification(TransactionFilterRequest request) {
+//        return (root, query, criteriaBuilder) -> {
+//            List<Predicate> predicates = new ArrayList<>();
+//
+//            if (request.getKeyword() != null) {
+//                predicates.add(criteriaBuilder.like(root.get("invoice"), request.getKeyword()));
+//            }
+//            if (request.getMonth() != null && request.getYear() != null) {
+//                Path<Date> transactionDatePath = root.get("transactionDate");
+//                Expression<Integer> transactionMonth = criteriaBuilder.function("MONTH", Integer.class, transactionDatePath);
+//                Expression<Integer> transactionYear = criteriaBuilder.function("YEAR", Integer.class, transactionDatePath);
+//
+//                Predicate monthPredicate = criteriaBuilder.equal(transactionMonth, request.getMonth());
+//                Predicate yearPredicate = criteriaBuilder.equal(transactionYear, request.getYear());
+//
+//                predicates.add(monthPredicate);
+//                predicates.add(yearPredicate);
+//            }
+//
+//            if (request.getDay() != null) {
+//                Path<Date> transactionDatePath = root.get("transactionDate");
+//                Expression<Integer> transactionDay = criteriaBuilder.function("DAY", Integer.class, transactionDatePath);
+//                Predicate dayPredicate = criteriaBuilder.equal(transactionDay, request.getDay());
+//
+//                predicates.add(dayPredicate);
+//            }
+//
+//            return query.where(predicates.toArray(new Predicate[]{})).getRestriction();
+//        };
+//    }
 }
