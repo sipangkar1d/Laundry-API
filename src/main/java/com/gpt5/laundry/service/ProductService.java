@@ -9,6 +9,7 @@ public interface ProductService {
     ProductResponse create(ProductRequest request);
 
     Product getById(String id);
+    ProductResponse getByIdResponse(String id);
 
     Page<ProductResponse> getAll(String keyword, Integer page, Integer size, String sortBy, String direction);
 

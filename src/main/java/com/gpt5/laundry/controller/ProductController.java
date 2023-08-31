@@ -1,5 +1,6 @@
 package com.gpt5.laundry.controller;
 
+import com.gpt5.laundry.entity.Product;
 import com.gpt5.laundry.model.request.ProductRequest;
 import com.gpt5.laundry.model.response.CommonResponse;
 import com.gpt5.laundry.model.response.PagingResponse;
@@ -13,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping(path = "/api/vi/products")
+@RequestMapping(path = "/api/v1/products")
 public class ProductController {
     private final ProductService productService;
 
@@ -69,6 +70,17 @@ public class ProductController {
                 .body(CommonResponse.builder()
                         .message("success delete product")
                         .statusCode(HttpStatus.OK.value())
+                        .build());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<?> getById(@PathVariable String id) {
+        ProductResponse response = productService.getByIdResponse(id);
+        return ResponseEntity.status(HttpStatus.OK)
+                .body(CommonResponse.builder()
+                        .message("success delete product")
+                        .statusCode(HttpStatus.OK.value())
+                        .data(response)
                         .build());
     }
 }

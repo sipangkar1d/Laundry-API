@@ -81,6 +81,23 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
+    public ProductResponse getByIdResponse(String id) {
+        log.info("start get product by id");
+
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "product not found"));
+        List<ProductPrice> productPrices = productPriceService.getProductPriceIsActiveAndProduct_Id(product.getId());
+
+        log.info("end get product by id");
+        return ProductResponse.builder()
+                .id(product.getId())
+                .stock(product.getStock())
+                .name(product.getName())
+                .price(productPrices.get(0).getPrice())
+                .build();
+    }
+
+    @Override
     public Page<ProductResponse> getAll(String keyword, Integer page, Integer size, String sortBy, String direction) {
         log.info("start get all customer");
 

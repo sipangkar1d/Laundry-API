@@ -27,6 +27,7 @@ public class Activity {
     private String description;
 
     @CreatedDate
+    @Temporal(TemporalType.TIMESTAMP)
     @Column(name = "activity_time", updatable = false)
     private Date activityTime;
 }
