@@ -101,7 +101,7 @@ public class TransactionController {
                         .build());
     }
 
-    @PutMapping("set-paid/{id}")
+    @GetMapping("set-paid/{id}")
     public ResponseEntity<?> setIsPaid(@PathVariable String id) {
         transactionService.setIsPaid(id);
         return ResponseEntity.status(HttpStatus.OK)
@@ -111,7 +111,7 @@ public class TransactionController {
                         .build());
     }
 
-    @PutMapping("update-status/{id}")
+    @GetMapping("update-status/{id}")
     public ResponseEntity<?> updateStatus(@PathVariable String id) {
         transactionService.updateStatus(id);
         return ResponseEntity.status(HttpStatus.OK)
