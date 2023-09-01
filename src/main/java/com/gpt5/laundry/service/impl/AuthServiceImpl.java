@@ -137,4 +137,13 @@ public class AuthServiceImpl implements AuthService {
                 .token(token)
                 .build();
     }
+
+    @Override
+    public String getRole(Authentication authentication) {
+        UserCredential userCredential = userCredentialService.getByEmail(authentication.getName());
+        List<String> roles = userCredential.getRoles().stream()
+                .map(role -> role.getRole().toString())
+                .collect(Collectors.toList());
+        return roles.get(0);
+    }
 }

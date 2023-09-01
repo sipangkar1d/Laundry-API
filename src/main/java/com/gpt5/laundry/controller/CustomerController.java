@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping(path = "/api/v1/customers")
 public class CustomerController {
     private final CustomerService customerService;
-
     @PostMapping()
     public ResponseEntity<?> create(@RequestBody CustomerRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -39,7 +38,7 @@ public class CustomerController {
 
     @GetMapping()
     public ResponseEntity<?> getAll(
-            @RequestParam(name = "keyword", required = false) String keyword,
+            @RequestParam(name = "keyword", defaultValue = "") String keyword,
             @RequestParam(name = "page", defaultValue = "0") Integer page,
             @RequestParam(name = "size", defaultValue = "5") Integer size,
             @RequestParam(name = "sort-by", defaultValue = "name") String sortBy,

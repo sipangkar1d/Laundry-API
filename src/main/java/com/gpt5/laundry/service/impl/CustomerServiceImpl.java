@@ -47,12 +47,17 @@ public class CustomerServiceImpl implements CustomerService {
     @Override
     public Customer update(CustomerRequest request) {
         log.info("start update customer");
+        Customer save;
 
-        Customer customer = getById(request.getId());
-        customer.setName(request.getName());
-        customer.setAddress(request.getAddress());
-        customer.setPhone(request.getPhone());
-        Customer save = customerRepository.save(customer);
+        try {
+            Customer customer = getById(request.getId());
+            customer.setName(request.getName());
+            customer.setAddress(request.getAddress());
+            customer.setPhone(request.getPhone());
+            save = customerRepository.save(customer);
+        } catch (DataIntegrityViolationException exception) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "phone number is already used");
+        }
 
         log.info("end update customer");
         return save;
@@ -72,15 +77,12 @@ public class CustomerServiceImpl implements CustomerService {
         log.info("start get all customer");
 
         Specification<Customer> specification = (root, query, criteriaBuilder) -> {
-            if (keyword != null) {
-                Predicate predicate = criteriaBuilder.or(
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + keyword.toLowerCase() + "%"),
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("address")), keyword.toLowerCase() + "%"),
-                        criteriaBuilder.like(criteriaBuilder.lower(root.get("phone")), keyword + "%")
-                );
-                return query.where(predicate).getRestriction();
-            }
-            return query.where().getRestriction();
+            Predicate predicate = criteriaBuilder.or(
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("name")), "%" + keyword.toLowerCase() + "%"),
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("address")), keyword.toLowerCase() + "%"),
+                    criteriaBuilder.like(criteriaBuilder.lower(root.get("phone")), keyword + "%")
+            );
+            return query.where(predicate).getRestriction();
         };
         Sort sorting = Sort.by(Sort.Direction.fromString(direction), sortBy);
         Pageable pageable = PageRequest.of(page, size, sorting);

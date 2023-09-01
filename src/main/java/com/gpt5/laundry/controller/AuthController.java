@@ -7,10 +7,8 @@ import com.gpt5.laundry.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -39,5 +37,14 @@ public class AuthController {
                         .message("Success Register Admin")
                         .data(authService.register(request))
                         .build());
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getRoles(Authentication authentication) {
+        return ResponseEntity.status(HttpStatus.OK).body(
+                CommonResponse.builder()
+                        .data(authService.getRole(authentication))
+                        .build()
+        );
     }
 }

@@ -106,6 +106,14 @@ public class TransactionServiceImpl implements TransactionService {
         Activity activity = activityService.create(Activity.builder()
                 .description(String.format("laundry %s masuk antrian", customer.getName()))
                 .build());
+        if (transaction.getIsPaid()) {
+            Revenue revenue = revenueService.create(Revenue.builder()
+                    .transaction(transaction)
+                    .revenue(transaction.getTransactionDetails().stream()
+                            .mapToLong(transactionDetail -> transactionDetail.getCategoryPrice().getPrice()
+                                    + (transactionDetail.getProductQuantity() * transactionDetail.getProductPrice().getPrice()))
+                            .sum()).build());
+        }
         log.info("end transaction");
         return getTransactionResponse(transaction);
     }
